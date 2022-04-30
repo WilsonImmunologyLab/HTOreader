@@ -6,6 +6,8 @@ An R toolkit for cell hashing (HTO) demultiplexing
 `devtools::install_github("LeiLi-Uchicago/HTOreader",dependencies = TRUE)`
 
 # How to use
+Of note, this tool is developed for Seurat users. the `pbmc.hashtag` in the following example is an Seurat object. Please load your "HTO" assay using Seurat package. 
+
 There are two main functions, `HTOClassification` for Hashtag demultiplexing, `PlotHTO` for ploting distributions of hashtags <br>
 `pbmc.hashtag <- HTOClassification(pbmc.hashtag, assay = 'HTO', method = 'CLR')` <br>
 `VlnPlot(pbmc.hashtag,features = rownames(pbmc.hashtag@assays[["HTO"]]@data), group.by = 'HTOid')` <br>

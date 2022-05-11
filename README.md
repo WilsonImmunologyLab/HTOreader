@@ -3,7 +3,7 @@ An R toolkit for cell hashing (HTO) demultiplexing
 
 # How to install
 `if (!require("devtools")) {install.packages("devtools")}`<br>
-`devtools::install_github("LeiLi-Uchicago/HTOreader",dependencies = TRUE)`
+`devtools::install_github("WilsonImmunologyLab/HTOreader",dependencies = TRUE)`
 
 # How to use
 Of note, this tool is developed for Seurat users. the `pbmc.hashtag` in the following example is an Seurat object. Please load your "HTO" assay using Seurat package. 

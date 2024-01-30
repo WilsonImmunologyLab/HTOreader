@@ -113,10 +113,10 @@ findMinimum <- function(x){
 #' @param object Seurat object
 #' @param assay the assay name of Hashtag signals, Default is "HTO"
 #' @param method normalize method, could be "CLR" or 'log'. Default is "CLR"
-#' @param min_limit min limit of cutoff, default is 1
+#' @param min_limit min limit of cutoff, default is 1.5 (empirical value)
 #'
 #' @export
-HTOcutoff <-  function(object = NULL, assay = 'HTO', method = 'CLR', min_limit = 1){
+HTOcutoff <-  function(object = NULL, assay = 'HTO', method = 'CLR', min_limit = 1.5){
   assay.data <- object@assays[[assay]]@counts
   features <- rownames(assay.data)
   curoff_feature <- hash()
@@ -275,10 +275,10 @@ HTOIdAssign <- function(data, cutoff){
 #' @param assay the assay name of Hashtag signals, Default is "HTO"
 #' @param method normalize method, could be "CLR" or 'log'. Default is "CLR"
 #' @param specify_cutoff users can specify their own cutoffs for HTOs instead of letting program to determine them
-#' @param min_limit the min limit of cutoff
+#' @param min_limit the min limit of cutoff, 1.5 for CLR and 2 for log (empirical value)
 #'
 #' @export
-HTOClassification <-  function(object = NULL, assay = 'HTO', method = 'CLR', specify_cutoff = NULL, min_limit = 1){
+HTOClassification <-  function(object = NULL, assay = 'HTO', method = 'CLR', specify_cutoff = NULL, min_limit = NULL){
   if(method == 'CLR'){
     normdata <- object@assays[[assay]]@data
   } else {
@@ -296,6 +296,14 @@ HTOClassification <-  function(object = NULL, assay = 'HTO', method = 'CLR', spe
     hto_res <- HTOIdAssign(normdata, cutoff)
   } else {
     # if cutoff is not given
+    if (is.null(min_limit)){
+      if(method == 'CLR') {
+        min_limit = 1.5
+      } else {
+        min_limit = 2
+      }
+    }
+
     cutoff <- HTOcutoff(object, assay = assay,  method =  method, min_limit = min_limit) # also output cutoff to the public environment
     hto_res <- HTOIdAssign(normdata, cutoff)
   }

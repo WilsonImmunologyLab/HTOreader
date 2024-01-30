@@ -275,7 +275,7 @@ HTOIdAssign <- function(data, cutoff){
 #' @param assay the assay name of Hashtag signals, Default is "HTO"
 #' @param method normalize method, could be "CLR" or 'log'. Default is "CLR"
 #' @param specify_cutoff users can specify their own cutoffs for HTOs instead of letting program to determine them
-#' @param min_limit the min limit of cutoff, 1.5 for CLR and 2 for log (empirical value)
+#' @param min_limit the min limit of cutoff, 1.5 for CLR and 3 for log (empirical value)
 #'
 #' @export
 HTOClassification <-  function(object = NULL, assay = 'HTO', method = 'CLR', specify_cutoff = NULL, min_limit = NULL){
@@ -300,7 +300,7 @@ HTOClassification <-  function(object = NULL, assay = 'HTO', method = 'CLR', spe
       if(method == 'CLR') {
         min_limit = 1.5
       } else {
-        min_limit = 2
+        min_limit = 3
       }
     }
 

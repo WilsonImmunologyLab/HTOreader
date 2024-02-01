@@ -112,14 +112,22 @@ findMinimum <- function(x){
 #'
 #' @param object Seurat object
 #' @param assay the assay name of Hashtag signals, Default is "HTO"
-#' @param method normalize method, could be "CLR" or 'log'. Default is "CLR"
+#' @param method normalize method, could be "CLR" or 'log'. Default is "log"
 #' @param min_limit min limit of cutoff, default is 1.5 (empirical value)
+#' @param re_sampling_cutoff a cutoff for re-sampling when there are too many HTOs (> 4) in a single experiment, by default we set 1.5 for CLR and 3 for log method
 #'
 #' @export
-HTOcutoff <-  function(object = NULL, assay = 'HTO', method = 'CLR', min_limit = 1.5){
+HTOcutoff <-  function(object = NULL, assay = 'HTO', method = 'log', min_limit = 1.5, re_sampling_cutoff = NULL){
   assay.data <- object@assays[[assay]]@counts
   features <- rownames(assay.data)
   curoff_feature <- hash()
+  if(is.null(re_sampling_cutoff)) {
+    if(method == 'CLR') {
+      re_sampling_cutoff <- 1.5
+    } else {
+      re_sampling_cutoff <- 3
+    }
+  }
 
   for (feature in features) {
     # fetch data
@@ -129,11 +137,24 @@ HTOcutoff <-  function(object = NULL, assay = 'HTO', method = 'CLR', min_limit =
       normdata <- object@assays[[assay]]@data[feature,]
     }
 
-    normdata <- as.data.frame(normdata)
+    # when HTO numbers > 4, re-sampling to make the data distribution balanced
+    if (length(features) > 4) {
+      re_sampled_data <- normdata[which(normdata >= 3)]
+      sampling_data <- sort(normdata[which(normdata < 3)])
+      index <- seq(1,length(sampling_data),by=N/2)
+      sampling_data <- sampling_data[index]
+      re_sampled_data <- c(sampling_data, re_sampled_data)
+
+      re_sampled_data <- as.data.frame(re_sampled_data)
+    } else {
+      re_sampled_data <- as.data.frame(normdata)
+      colnames(re_sampled_data) <- c('re_sampled_data')
+    }
+
     # mixture modeling
     mo1 <- FLXMRglm(family = "gaussian")
     mo2 <- FLXMRglm(family = "gaussian")
-    flexfit <- flexmix(normdata ~ 1, data = normdata, k = 2, model = list(mo1, mo2))
+    flexfit <- flexmix(re_sampled_data ~ 1, data = re_sampled_data, k = 2, model = list(mo1, mo2))
 
     # get fitted parameters
     c1 <- parameters(flexfit, component=1)[[1]]
@@ -143,7 +164,16 @@ HTOcutoff <-  function(object = NULL, assay = 'HTO', method = 'CLR', min_limit =
     # select_min <- c1[1] + (c2[1] - c1[1]) * c1[2] / (c1[2] + c2[2])
     select_min <- c1[1] + (c2[1] - c1[1]) * sqrt(c1[2]) / (sqrt(c1[2]) + sqrt(c2[2])) # when SD1 and SD2 are very different, use the ratio of SQRT instead of that of original value can improve the results
     if(select_min < min_limit){
-      select_min <- min_limit
+
+      density.data <- density(normdata)
+      if(c1[1] > c2[1]) {
+        sel_index <- intersect(which(density.data$x > c2[1]), which(density.data$x < c1[1]))
+      } else {
+        sel_index <- intersect(which(density.data$x < c2[1]), which(density.data$x > c1[1]))
+      }
+      sel_y <- density.data$y[sel_index]
+      sel_x <- density.data$x[sel_index]
+      select_min <- sel_x[which(sel_y == min(sel_y))]
     }
     curoff_feature[feature] <- select_min
   }
@@ -159,13 +189,13 @@ HTOcutoff <-  function(object = NULL, assay = 'HTO', method = 'CLR', min_limit =
 #'
 #' @param object Seurat object
 #' @param assay the assay name of Hashtag signals, Default is "HTO"
-#' @param method normalize method, could be "CLR" or 'log'. Default is "CLR"
+#' @param method normalize method, could be "CLR" or 'log'. Default is "log"
 #' @param cutoff users can choose to display cutoff for each HTO signal by giving a data array
 #' @param xlim max limit of x axis. Default is "NULL". Can be used to trim the density plot for better visualization of positive peaks and negative peaks
 #' @param plot_existing_cutoff plot existing cutoff if the method fits
 #'
 #' @export
-PlotHTO <- function(object = NULL, assay = 'HTO', method = 'CLR', cutoff = NULL, xlim = NULL, plot_existing_cutoff = TRUE){
+PlotHTO <- function(object = NULL, assay = 'HTO', method = 'log', cutoff = NULL, xlim = NULL, plot_existing_cutoff = TRUE){
   Plots <- list()
 
   assay.data <- object@assays[[assay]]@counts
@@ -273,12 +303,12 @@ HTOIdAssign <- function(data, cutoff){
 #'
 #' @param object Seurat object
 #' @param assay the assay name of Hashtag signals, Default is "HTO"
-#' @param method normalize method, could be "CLR" or 'log'. Default is "CLR"
+#' @param method normalize method, could be "CLR" or 'log'. Default is "log"
 #' @param specify_cutoff users can specify their own cutoffs for HTOs instead of letting program to determine them
 #' @param min_limit the min limit of cutoff, 1.5 for CLR and 3 for log (empirical value)
 #'
 #' @export
-HTOClassification <-  function(object = NULL, assay = 'HTO', method = 'CLR', specify_cutoff = NULL, min_limit = NULL){
+HTOClassification <-  function(object = NULL, assay = 'HTO', method = 'log', specify_cutoff = NULL, min_limit = NULL){
   if(method == 'CLR'){
     normdata <- object@assays[[assay]]@data
   } else {

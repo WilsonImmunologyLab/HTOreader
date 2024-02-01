@@ -141,7 +141,7 @@ HTOcutoff <-  function(object = NULL, assay = 'HTO', method = 'log', min_limit =
     if (length(features) > 4) {
       re_sampled_data <- normdata[which(normdata >= 3)]
       sampling_data <- sort(normdata[which(normdata < 3)])
-      index <- seq(1,length(sampling_data),by=N/2)
+      index <- seq(1,length(sampling_data),by= length(features)/2)
       sampling_data <- sampling_data[index]
       re_sampled_data <- c(sampling_data, re_sampled_data)
 

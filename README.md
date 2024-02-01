@@ -2,18 +2,23 @@
 An R toolkit for cell hashing (HTO) demultiplexing
 
 # How to install
+make sure you installed these two dependencies:
+`install.packages("flexmix")` and `install.packages("hash")`
+then:
 `if (!require("devtools")) {install.packages("devtools")}`<br>
-`devtools::install_github("WilsonImmunologyLab/HTOreader",dependencies = TRUE)`
+`devtools::install_github("WilsonImmunologyLab/HTOreader")`
+
+
 
 # How to use
-Of note, this tool is developed for Seurat users. the `pbmc.hashtag` in the following example is an Seurat object. Please load your "HTO" assay using Seurat package. 
+Of note, this tool is developed for Seurat users. the `pbmc.hashtag` in the following example is a Seurat object. Please load your "HTO" assay using the Seurat package. 
 
-There are two main functions, `HTOClassification` for Hashtag demultiplexing, `PlotHTO` for ploting distributions of hashtags <br>
+There are two main functions, `HTOClassification` for Hashtag demultiplexing, `PlotHTO` for plotting distributions of hashtags <br>
 `pbmc.hashtag <- HTOClassification(pbmc.hashtag, assay = 'HTO', method = 'CLR')` <br>
 `VlnPlot(pbmc.hashtag,features = rownames(pbmc.hashtag@assays[["HTO"]]@data), group.by = 'HTOid')` <br>
 ![000009](https://user-images.githubusercontent.com/4589583/161608424-2a748fdf-5872-49fa-b519-ef0519b30b48.png)
 
-Users can use PlotHTO function to check the quality of cutoff of each HTO <br>
+Users can use PlotHTO function to check the quality of the cutoff of each HTO <br>
 `plots1 <- PlotHTO(pbmc.hashtag, assay = 'HTO', method = 'CLR')` <br>
 this function returns a list of ggplot objects, use plot_grid function to plot them: <br>
 `plot_grid(plotlist = plots1)` <br>

@@ -3,8 +3,8 @@ An R toolkit for cell hashing (HTO) demultiplexing
 
 # How to install
 make sure you installed these two dependencies:
-`install.packages("flexmix")` and `install.packages("hash")`
-then:
+`install.packages("flexmix")` and `install.packages("hash")`<br>
+then:<br>
 `if (!require("devtools")) {install.packages("devtools")}`<br>
 `devtools::install_github("WilsonImmunologyLab/HTOreader")`
 

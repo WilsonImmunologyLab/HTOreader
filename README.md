@@ -14,7 +14,7 @@ Please refer to /docs folder of this repository. We have provided the HTML versi
 Data for this sample under /data folder. 
 
 # Quick start
-Of note, this tool is developed for Seurat users. the `pbmc.hashtag` in the following example is a Seurat object. Please load your "HTO" assay using the Seurat package. 
+The `pbmc.hashtag` in the following example is a Seurat object. Please load your "HTO" assay using the Seurat package (More details in our example). 
 
 There are two main functions, `HTOClassification` for Hashtag demultiplexing, `PlotHTO` for plotting distributions of hashtags <br>
 `pbmc.hashtag <- HTOClassification(pbmc.hashtag, assay = 'HTO', method = 'CLR')` <br>

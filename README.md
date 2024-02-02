@@ -2,15 +2,18 @@
 An R toolkit for cell hashing (HTO) demultiplexing
 
 # How to install
-make sure you installed these two dependencies:
-`install.packages("flexmix")` and `install.packages("hash")`<br>
+make sure you installed these two dependencies:<br>
+`install.packages("flexmix")` <br> `install.packages("hash")`<br>
 then:<br>
 `if (!require("devtools")) {install.packages("devtools")}`<br>
 `devtools::install_github("WilsonImmunologyLab/HTOreader")`
 
+# Example of Hybrid demultiplexing 
 
+Please refer to /docs folder of this repository. We have provided the HTML version and the R markdown file. 
+Data for this sample under /data folder. 
 
-# How to use
+# Quick start
 Of note, this tool is developed for Seurat users. the `pbmc.hashtag` in the following example is a Seurat object. Please load your "HTO" assay using the Seurat package. 
 
 There are two main functions, `HTOClassification` for Hashtag demultiplexing, `PlotHTO` for plotting distributions of hashtags <br>

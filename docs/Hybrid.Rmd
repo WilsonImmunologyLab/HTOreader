@@ -1,0 +1,244 @@
+---
+title: "Using hybrid demultiplexing strategy for cell hashing datasets"
+author: Lei Li <lei.li@stjude.org>
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: Cayman
+    highlight: github
+  html_document: default
+  pdf_document: default
+  knitrBootstrap::bootstrap_document:
+    theme: amelia
+    highlight: sunburst
+    theme.chooser: TRUE
+    highlight.chooser: TRUE
+---
+
+```{r setup, include=FALSE}
+options(tinytex.verbose = TRUE)
+knitr::opts_chunk$set(
+  cache = TRUE,
+  cache.lazy = FALSE,
+  tidy = TRUE
+)
+```
+
+# Load packages
+```{r results='hide', results='hide', message=FALSE, warning=FALSE, warning=FALSE}
+# we would like to demonstrate the hybrid strategy using Seurat workflow
+library(Seurat)
+library(cowplot)
+
+# packages for cell hashing demultiplexing 
+library(HTOreader)
+library(cellhashR) # this package integrated the following methods: multiseq, htodemux, gmm_demux, bff_raw, bff_cluster and dropletutils
+```
+
+# Step 1 Load data from 10X folder
+We load 8pool-CA dataset from the 10X folder using Seurat
+```{r results='hide', results='hide', message=FALSE, warning=FALSE}
+# Load in the RNA UMI matrix for doublet negative (DN) dataset and antigen specific (AS) dataset
+DN.data <- Read10X(data.dir = "../data/8pool-Carr-RNA/filtered_feature_bc_matrix/")
+```
+
+split different modalities: Cell hashing (HTO), antigen probes (Probe) and CITE-seq surface protein panel (ADT)
+In 8pool DN and AS datasets, we have applied 8 cell hashing tags, 18 antigen probes, and a large CITE-seq panel
+```{r}
+DN.probe <- DN.data[["Antibody Capture"]][1:18,]                            # expression of antigen probes, Carrier data set doesn't have this measurement
+DN.hto <- DN.data[["Antibody Capture"]][19:26,]                             # expression of cell hashing tags  
+DN.ADT <- DN.data[["Antibody Capture"]][27:163,]                            # expression of CITE-seq surface protein panel
+```
+
+# Step 2 Create Seurat object and attached multi-modality data
+```{r results='hide', message=FALSE, warning=FALSE}
+# create Seurat object
+DN <- CreateSeuratObject(counts = DN.data$`Gene Expression`, project = "Carr")
+
+# create multi-modality assay and attach them to Seurat object
+DN[['HTO']] <- CreateAssayObject(counts = DN.hto)
+DN[['ADT']] <- CreateAssayObject(counts = DN.ADT)
+
+# percent of MT genes
+DN[["percent.mt"]] <- PercentageFeatureSet(object = DN, pattern = "^MT-")
+# percent of IG genes (for B cell study)
+DN[["percent.ig"]] <- PercentageFeatureSet(object = DN, pattern = "^IG[HKL]")
+```
+
+# Step 3 Pre-process
+Filter out unwanted cells (optional)
+```{r results='hide', message=FALSE, warning=FALSE, fig.width=4, fig.height=4}
+DN <- subset(DN, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 10)
+```
+
+Normalize HTO and ADT data
+```{r results='hide', message=FALSE, warning=FALSE}
+DN <- NormalizeData(DN, assay = "HTO", normalization.method = "CLR")
+DN <- NormalizeData(DN, assay = "ADT", normalization.method = "CLR")
+```
+
+# Step 4 Cell hashing demultiplexing
+## 1) Demultiplexing of cell hashing using existing methods integrated in cellhashR: multiseq, gmm_demux, bff_raw, bff_cluster, dropletutils
+load data (we hide the plots of this step)
+```{r results='hide', message=FALSE, warning=FALSE, fig.show='hide'}
+#  parse cell hashing output, providing a barcode whitelist. (please refer to cellhashR tutorial for more information: https://github.com/BimberLab/cellhashR?tab=readme-ov-file#example) 
+barcodeData <- ProcessCountMatrix(rawCountData = '../data/8pool-Carr-RNA/filtered_feature_bc_matrix/', barcodeWhitelist = c("hashtag1","hashtag2","hashtag3","hashtag4","hashtag5","hashtag6","hashtag7","hashtag8"), datatypeName = 'Antibody Capture')
+rownames(barcodeData) <- c("S282","S283","S284","S344","S397","S417","S421","S423")
+```
+
+QC (we hide the plots of this step)
+```{r message=FALSE, warning=FALSE, fig.show='hide', results='hide'}
+# Create QC plots of barcode normalization
+PlotNormalizationQC(barcodeData)
+```
+
+Calling cell hashing using different methods (we hide the plots of this step)
+```{r message=FALSE, warning=FALSE, fig.show='hide', results='hide'}
+# Generate the final cell hashing calls
+calls <- GenerateCellHashingCalls(barcodeMatrix = barcodeData, methods = c('multiseq', 'gmm_demux','bff_raw','bff_cluster','dropletutils'))
+```
+
+```{r message=FALSE, warning=FALSE, results='hide'}
+# Inspect negative cells:
+SummarizeCellsByClassification(calls = calls, barcodeMatrix = barcodeData)
+```
+
+## 2) Demultiplexing of cell hashing using Seurat (htodemux)
+```{r results='hide', message=FALSE, warning=FALSE}
+DN <- NormalizeData(DN, assay = "HTO", normalization.method = "CLR")
+DN <- HTODemux(DN, assay = "HTO", positive.quantile = 0.99)
+```
+
+## 3) Demultiplexing of cell hashing using HTOreader
+```{r results='hide', message=FALSE, warning=FALSE, echo=TRUE, dpi=300, fig.width=8, fig.height=3}
+DN <- HTOClassification(DN, assay = 'HTO', method = 'log')
+
+plots <- PlotHTO(DN, assay = 'HTO', method = 'log')
+plot_grid(plotlist = plots, nrow = 2)
+```
+
+## 4)integrate HTOreader, Seurat results with cellhashR results
+```{r results='hide', message=FALSE, warning=FALSE}
+rownames(calls) <- calls$cellbarcode
+DN_hq_barcode <- names(DN@active.ident)
+DN_hq_barcode <- sub('-1','',DN_hq_barcode)
+
+calls_hq <- calls[DN_hq_barcode,]
+
+HTOid.hq <- DN$HTOid
+names(HTOid.hq) <- sub('-1','',names(HTOid.hq))
+calls_hq$HTOid <- HTOid.hq[rownames(calls_hq)]
+
+Seuratid.hq <- DN$hash.ID
+names(Seuratid.hq) <- sub('-1','',names(Seuratid.hq))
+calls_hq$seurat <- as.character(Seuratid.hq[rownames(calls_hq)])
+```
+
+
+```{r results='hide', message=FALSE, warning=FALSE}
+res_table <- matrix(data = c(table(calls_hq$multiseq), table(calls_hq$gmm_demux), table(calls_hq$bff_raw), table(calls_hq$bff_cluster), table(calls_hq$dropletutils), table(calls_hq$HTOid), table(calls_hq$seurat)), nrow = 7, ncol = 10, byrow = TRUE,dimnames = list(c('multiseq', 'gmm_demux','bff_raw','bff_cluster', 'dropletutils','HTOreader','htodemux(Seurat)'), names(table(calls_hq$multiseq))))
+
+# singlet rate
+singlet_count <- rowSums(res_table[,which(colnames(res_table) %in% rownames(barcodeData))])
+singlet_rate <- singlet_count / rowSums(res_table)
+
+final_table <- cbind(res_table, singlet_count, singlet_rate)
+colnames(final_table) <- c(colnames(res_table), 'singlet','singlet rate')
+```
+Cell hashing Demultiplexing results:
+```{r}
+final_table
+```
+
+We found two BFF models failed to identify S282. 
+The best singlet rate is 83.9%,  average rate is ~80% (exlcuding BFF models due to failure of S282)
+
+# Step 4, Apply hybrid strategy: combine cell hashing demultiplexing with SNP-based method
+We then integrate our cell hashing results with souporcell genotype clusters
+```{r results='hide', message=FALSE, warning=FALSE}
+souporcell.res <- read.csv('./8pool/clusters.tsv', sep = '\t')
+souporcell.res$identity <- souporcell.res$status
+souporcell.res$identity[which(souporcell.res$status == 'singlet')] <- paste0(souporcell.res$status[which(souporcell.res$status == 'singlet')], souporcell.res$assignment[which(souporcell.res$status == 'singlet')])
+rownames(souporcell.res) <- sub(pattern = '-1', replacement = '',x = souporcell.res$barcode)
+
+calls_hq$souporcell <- souporcell.res[calls_hq$cellbarcode, 'identity']
+```
+
+The singlet of souporcell clustering is much higher than any cell hashing methods, however, we don't know the identify of each singlet cluster identified by souporcell.
+Singlet rate of souporcell:
+```{r}
+(1 - length(which(calls_hq$souporcell %in% c('doublet','unassigned'))) / length(calls_hq$souporcell)) * 100
+```
+
+By identifying the corrolation between souporcell results with any cell hashing method, we're able to identify the identify of each singlet cluster identified by souporcell.
+In this dataset, singlet0 = S397, singlet1 = S344, singlet2 = S284, singlet3 = S283, singlet4 = S417, singlet5 = S423, singlet6 = S282 and singlet7 = S421. 
+```{r}
+table(calls_hq$HTOid, calls_hq$souporcell)
+```
+
+BTW, The Hybrid strategy is highly flexiable to cell hashing demultiplexing method and quality, it works with all cell hashing methods. 
+```{r}
+table(calls_hq$multiseq, calls_hq$souporcell)
+table(calls_hq$seurat, calls_hq$souporcell)
+table(calls_hq$gmm_demux, calls_hq$souporcell)
+table(calls_hq$dropletutils, calls_hq$souporcell)
+```
+
+Furthermore, The Hybrid strategy even works with two BFF models that fail to identify S282. We can see singlet6 group is not associated with any cell hashing groups, considering BFF models failed to identify S282, then singlet6 = S282
+```{r}
+table(calls_hq$bff_raw, calls_hq$souporcell)
+table(calls_hq$bff_cluster, calls_hq$souporcell)
+```
+
+
+# Step 5, hybrid demultiplexing for multiple datasets from the same group of donors (optional)
+In this case, we have 8pool-AS, which shares the same group of human donors but doesn't have cell hashing for some reason. Using Hybrid demultiplexing, we're still able to handle it.
+We load the 8pool-AS data first:
+```{r results='hide', message=FALSE, warning=FALSE}
+AS.data <- Read10X(data.dir = "../data/8pool-AS-RNA/filtered_feature_bc_matrix/")
+
+AS.probe <- AS.data[["Antibody Capture"]][1:18,]                            # expression of antigen probes
+AS.hto <- AS.data[["Antibody Capture"]][19:26,]                             # expression of cell hashing tags, Antigen specific data set doesn't have this measurement, they have 0 counts 
+AS.ADT <- AS.data[["Antibody Capture"]][27:163,]                            # expression of CITE-seq surface protein panel
+
+AS <- CreateSeuratObject(counts = AS.data$`Gene Expression`, project = "AS")
+
+AS[['ADT']] <- CreateAssayObject(counts = AS.ADT)
+AS[['Probe']] <- CreateAssayObject(counts = AS.probe)
+
+AS[["percent.mt"]] <- PercentageFeatureSet(object = AS, pattern = "^MT-")
+AS[["percent.ig"]] <- PercentageFeatureSet(object = AS, pattern = "^IG[HKL]")
+
+AS <- subset(AS, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 10)
+
+AS <- NormalizeData(AS, assay = "Probe", normalization.method = "CLR")
+AS <- NormalizeData(AS, assay = "ADT", normalization.method = "CLR")
+```
+
+We ran souporcell on the entire 8pool dataset (AS + DN) so that the genotypes are across two datasets. We annotate souporcell genotype clusters to 8pool-AS dataset
+```{r results='hide', message=FALSE, warning=FALSE}
+souporcell.res <- read.csv('./8pool/clusters.tsv', sep = '\t')
+souporcell.res$identity <- souporcell.res$status
+souporcell.res$identity[which(souporcell.res$status == 'singlet')] <- paste0(souporcell.res$status[which(souporcell.res$status == 'singlet')], souporcell.res$assignment[which(souporcell.res$status == 'singlet')])
+rownames(souporcell.res) <- souporcell.res$barcode
+
+AS$souporcell <- souporcell.res[names(AS@active.ident), 'identity']
+```
+
+We get high singlet rate for 8pool-AS using hybrid demultiplexing and saved reagents of cell hashing on 8pool-AS. 
+Beside the economy, there is a more critical reason for not using cell hashing in 8pool-AS dataset: we aim to measure the binding affinity between antigen specific B cells and our antigen probes. We don't want any disruptions from the cell hashing due to they share the same channel(Antibody Capture)
+
+Singlet rate of hybrid on 8pool-AS:
+```{r}
+(1 - length(which(AS$souporcell %in% c('doublet','unassigned'))) / length(AS$souporcell)) * 100
+table(AS$souporcell)
+```
+
+
+Session info
+```{r}
+sessionInfo()
+```
+
+
+

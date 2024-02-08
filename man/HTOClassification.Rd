@@ -7,9 +7,9 @@
 HTOClassification(
   object = NULL,
   assay = "HTO",
-  method = "CLR",
+  method = NULL,
   specify_cutoff = NULL,
-  min_limit = 1
+  min_limit = NULL
 )
 }
 \arguments{
@@ -17,11 +17,11 @@ HTOClassification(
 
 \item{assay}{the assay name of Hashtag signals, Default is "HTO"}
 
-\item{method}{normalize method, could be "CLR" or 'log'. Default is "CLR"}
+\item{method}{normalize method, could be "CLR" or 'log'. If not specified, will use both methods and return the best results. Default is NULL}
 
 \item{specify_cutoff}{users can specify their own cutoffs for HTOs instead of letting program to determine them}
 
-\item{min_limit}{the min limit of cutoff}
+\item{min_limit}{the min limit of cutoff, 1.5 for CLR and 3 for log (empirical value)}
 }
 \description{
 main function for HTO group Classification

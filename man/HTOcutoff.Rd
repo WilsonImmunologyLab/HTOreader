@@ -11,9 +11,11 @@ HTOcutoff(object = NULL, assay = "HTO", method = "CLR", min_limit = 1)
 
 \item{assay}{the assay name of Hashtag signals, Default is "HTO"}
 
-\item{method}{normalize method, could be "CLR" or 'log'. Default is "CLR"}
+\item{method}{normalize method, could be "CLR" or 'log'. Default is "log"}
 
-\item{min_limit}{min limit of cutoff, default is 1}
+\item{min_limit}{min limit of cutoff, default is 1.5 (empirical value)}
+
+\item{re_sampling_cutoff}{a cutoff for re-sampling when there are too many HTOs (> 4) in a single experiment, by default we set 1.5 for CLR and 3 for log method}
 }
 \description{
 function to determine cutoff for HTO signals

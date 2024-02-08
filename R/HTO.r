@@ -309,13 +309,19 @@ HTOIdAssign <- function(data, cutoff){
 #'
 #' @export
 HTOClassification <-  function(object = NULL, assay = 'HTO', method = NULL, specify_cutoff = NULL, min_limit = NULL){
-  if(method == 'CLR'){
-    normdata <- object@assays[[assay]]@data
-  } else {
-    normdata <- log1p(object@assays[[assay]]@counts)
-  }
-  features <- rownames(normdata)
-
+  if(is.null(method)){
+      normdata2 <- object@assays[[assay]]@data
+      normdata1 <- log1p(object@assays[[assay]]@counts)
+      features <- rownames(normdata1)
+    } else {
+      if(method == 'CLR'){
+        normdata <- object@assays[[assay]]@data
+      } else {
+        normdata <- log1p(object@assays[[assay]]@counts)
+      }
+      features <- rownames(normdata)
+    }
+  
   # determine cutoff and cluster cells
   if(!is.null(specify_cutoff)){
     if(is.null(method)){
@@ -328,23 +334,14 @@ HTOClassification <-  function(object = NULL, assay = 'HTO', method = NULL, spec
     cutoff <- hash(features, specify_cutoff)
     hto_res <- HTOIdAssign(normdata, cutoff)
   } else {
-    # if cutoff is not given
-    if (is.null(min_limit)){
-      if(method == 'CLR') {
-        min_limit = 1.5
-      } else {
-        min_limit = 3
-      }
-    }
-
     if(is.null(method)) {
       # if method is NULL, run both methods
       cutoff1 <- HTOcutoff(object, assay = assay,  method =  'log', min_limit = 3) 
-      hto_res1 <- HTOIdAssign(normdata, cutoff1)
+      hto_res1 <- HTOIdAssign(normdata1, cutoff1)
       n1 <- length(which(hto_res1$HTOid %in% c('Doublet','Negative')))
 
       cutoff2 <- HTOcutoff(object, assay = assay,  method =  'CLR', min_limit = 1.5) 
-      hto_res2 <- HTOIdAssign(normdata, cutoff2)
+      hto_res2 <- HTOIdAssign(normdata2, cutoff2)
       n2 <- length(which(hto_res2$HTOid %in% c('Doublet','Negative')))
 
       if(n1 > n2) {
@@ -358,6 +355,15 @@ HTOClassification <-  function(object = NULL, assay = 'HTO', method = NULL, spec
       }
 
     } else {
+       # if cutoff is not given
+      if (is.null(min_limit)){
+        if(method == 'CLR') {
+          min_limit = 1.5
+        } else {
+          min_limit = 3
+        }
+      }
+
       cutoff <- HTOcutoff(object, assay = assay,  method =  method, min_limit = min_limit) # also output cutoff to the public environment
       hto_res <- HTOIdAssign(normdata, cutoff)
     }

@@ -156,7 +156,7 @@ The best singlet rate is 83.9%,  average rate is ~80% (exlcuding BFF models due 
 # Step 4, Apply hybrid strategy: combine cell hashing demultiplexing with SNP-based method
 We then integrate our cell hashing results with souporcell genotype clusters
 ```{r results='hide', message=FALSE, warning=FALSE}
-souporcell.res <- read.csv('./8pool/clusters.tsv', sep = '\t')
+souporcell.res <- read.csv('../data/clusters.tsv', sep = '\t')
 souporcell.res$identity <- souporcell.res$status
 souporcell.res$identity[which(souporcell.res$status == 'singlet')] <- paste0(souporcell.res$status[which(souporcell.res$status == 'singlet')], souporcell.res$assignment[which(souporcell.res$status == 'singlet')])
 rownames(souporcell.res) <- sub(pattern = '-1', replacement = '',x = souporcell.res$barcode)
@@ -217,7 +217,7 @@ AS <- NormalizeData(AS, assay = "ADT", normalization.method = "CLR")
 
 We ran souporcell on the entire 8pool dataset (AS + DN) so that the genotypes are across two datasets. We annotate souporcell genotype clusters to 8pool-AS dataset
 ```{r results='hide', message=FALSE, warning=FALSE}
-souporcell.res <- read.csv('./8pool/clusters.tsv', sep = '\t')
+souporcell.res <- read.csv('../data/clusters.tsv', sep = '\t')
 souporcell.res$identity <- souporcell.res$status
 souporcell.res$identity[which(souporcell.res$status == 'singlet')] <- paste0(souporcell.res$status[which(souporcell.res$status == 'singlet')], souporcell.res$assignment[which(souporcell.res$status == 'singlet')])
 rownames(souporcell.res) <- souporcell.res$barcode

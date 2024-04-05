@@ -7,7 +7,7 @@
 PlotHTO(
   object = NULL,
   assay = "HTO",
-  method = "CLR",
+  method = "log",
   cutoff = NULL,
   xlim = NULL,
   plot_existing_cutoff = TRUE
@@ -18,7 +18,7 @@ PlotHTO(
 
 \item{assay}{the assay name of Hashtag signals, Default is "HTO"}
 
-\item{method}{normalize method, could be "CLR" or 'log'. Default is "CLR"}
+\item{method}{normalize method, could be "CLR" or 'log'. Default is "log"}
 
 \item{cutoff}{users can choose to display cutoff for each HTO signal by giving a data array}
 

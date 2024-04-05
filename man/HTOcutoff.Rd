@@ -4,7 +4,13 @@
 \alias{HTOcutoff}
 \title{HTOcutoff}
 \usage{
-HTOcutoff(object = NULL, assay = "HTO", method = "CLR", min_limit = 1)
+HTOcutoff(
+  object = NULL,
+  assay = "HTO",
+  method = "log",
+  min_limit = 1.5,
+  re_sampling_cutoff = NULL
+)
 }
 \arguments{
 \item{object}{Seurat object}

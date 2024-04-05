@@ -321,7 +321,7 @@ HTOClassification <-  function(object = NULL, assay = 'HTO', method = NULL, spec
       }
       features <- rownames(normdata)
     }
-  
+
   # determine cutoff and cluster cells
   if(!is.null(specify_cutoff)){
     if(is.null(method)){
@@ -336,11 +336,11 @@ HTOClassification <-  function(object = NULL, assay = 'HTO', method = NULL, spec
   } else {
     if(is.null(method)) {
       # if method is NULL, run both methods
-      cutoff1 <- HTOcutoff(object, assay = assay,  method =  'log', min_limit = 3) 
+      cutoff1 <- HTOcutoff(object, assay = assay,  method =  'log', min_limit = 3)
       hto_res1 <- HTOIdAssign(normdata1, cutoff1)
       n1 <- length(which(hto_res1$HTOid %in% c('Doublet','Negative')))
 
-      cutoff2 <- HTOcutoff(object, assay = assay,  method =  'CLR', min_limit = 1.5) 
+      cutoff2 <- HTOcutoff(object, assay = assay,  method =  'CLR', min_limit = 1.5)
       hto_res2 <- HTOIdAssign(normdata2, cutoff2)
       n2 <- length(which(hto_res2$HTOid %in% c('Doublet','Negative')))
 
@@ -387,4 +387,111 @@ HTOClassification <-  function(object = NULL, assay = 'HTO', method = NULL, spec
   object$HTOid_detail <- hto_res$HTOid_detail
 
   return(object)
+}
+
+
+#' HybridDemultiplexing
+#'
+#' function for HybridDemultiplexing
+#'
+#' @param object Seurat object
+#' @param cellhashing_label label name for cell hashing in the meta data
+#' @param genotype_label label name for snp-based method in the meta data
+#' @param hto_names a vector of all HTO names
+#' @param c_threshold threshold of convergence score, default is 0.7.
+#' @param snp_doublet_label doublet label in SNP results.
+#' @param snp_unassign_label unassigned label in SNP results.
+#' @param cellhashing_doublet_label doublet label in cell hashing results.
+#' @param cellhashing_negative_label negative label in cell hashing results.
+#'
+#' @export
+#'
+HybridDemultiplexing <- function(object = NULL, cellhashing_label = NULL, genotype_label = NULL, hto_names = NULL, c_threshold = 0.7, snp_doublet_label = 'doublet', snp_unassign_label = 'unassigned', cellhashing_doublet_label = 'Doublet', cellhashing_negative_label = 'Negative') {
+  # object <- DN
+  # cellhashing_label <- 'bff_cluster'
+  # genotype_label <- 'souporcell'
+  # hto_names <- c("S282","S283","S284","S344","S397","S417","S421","S423")
+
+  working_data <- object@meta.data[,c(cellhashing_label, genotype_label)]
+  colnames(working_data) <- c('Cellhash','Genotype')
+  working_data$Cellhash <- as.character(working_data$Cellhash)
+  working_data$Genotype <- as.character(working_data$Genotype)
+
+  waiting_list <- c()
+  for (hto in hto_names) {
+    if(hto %in% names(table(working_data$Cellhash))) {
+      # do nothing
+    } else {
+      waiting_list <- c(waiting_list, hto)
+    }
+  }
+
+  working_data$Cellhash_cat <- 'singlet'
+  working_data$Cellhash_cat[which(working_data$Cellhash == cellhashing_doublet_label)] <- 'doublet'
+  working_data$Cellhash_cat[which(working_data$Cellhash == cellhashing_negative_label)] <- 'unassigned'
+  working_data$Cellhash[which(working_data$Cellhash == cellhashing_doublet_label)] <- 'doublet'
+  working_data$Cellhash[which(working_data$Cellhash == cellhashing_negative_label)] <- 'unassigned'
+
+  working_data$Genotype_cat <- 'singlet'
+  working_data$Genotype_cat[which(working_data$Genotype == snp_doublet_label)] <- 'doublet'
+  working_data$Genotype_cat[which(working_data$Genotype == snp_unassign_label)] <- 'unassigned'
+  working_data$Genotype[which(working_data$Genotype == snp_doublet_label)] <- 'doublet'
+  working_data$Genotype[which(working_data$Genotype == snp_unassign_label)] <- 'unassigned'
+
+  # link cell hash clusters with genotype groups
+  snp_singlet_index <- which(working_data$Genotype_cat == 'singlet')
+  cellhash_singlet_index <- which(working_data$Cellhash_cat == 'singlet')
+  singlet_set_working_data <- working_data[intersect(snp_singlet_index, cellhash_singlet_index),]
+
+  corr_data <- table(singlet_set_working_data$Cellhash, singlet_set_working_data$Genotype)
+
+  pair_res <- list()
+  for (cellhashing_label in rownames(corr_data)) {
+    cur_row_data <- corr_data[cellhashing_label,]
+    cur_row_data <- sort(cur_row_data, decreasing = TRUE)
+    pair_res[[cellhashing_label]] <- names(cur_row_data[1])
+  }
+  if(length(waiting_list) > 1) {
+    stop("More than 1 hashtags missing!")
+  } else if (length(waiting_list) == 1) {
+    pair_res[[waiting_list[1]]] <- setdiff(colnames(corr_data), unlist(pair_res))
+    msg <- paste0('The missing HTO ',waiting_list[1], ' is assigned to ',  pair_res[[waiting_list[1]]])
+    message(msg)
+  }
+
+  pair_res <- unlist(pair_res)
+  info_str = 'We matched: \n'
+  for (index in c(1:length(pair_res))) {
+    info_str = paste0(info_str, names(pair_res)[index], ' with ', pair_res[index], '\n')
+  }
+  cat(info_str)
+  # update object
+  for (index in c(1:length(pair_res))) {
+    working_data[which(working_data$Genotype == pair_res[index]), 'Genotype'] <- names(pair_res)[index]
+  }
+
+  # calculate convergence score
+  singlet_set_working_data <- working_data[intersect(snp_singlet_index, cellhash_singlet_index),]
+  c_score <- length(which(singlet_set_working_data$Cellhash == singlet_set_working_data$Genotype)) / dim(singlet_set_working_data)[1]
+
+  if (c_score > c_threshold) {
+    working_data$hybridID <- 'unassigned'
+
+    consisstent_index <- which(working_data$Cellhash == working_data$Genotype)
+    working_data$hybridID[consisstent_index] <- working_data$Genotype[consisstent_index]
+    inconsisstent_case1_index <- intersect(which(working_data$Genotype_cat == 'singlet'), which(working_data$Cellhash_cat != 'singlet'))
+    working_data$hybridID[inconsisstent_case1_index] <- working_data$Genotype[inconsisstent_case1_index]
+
+    object$hybridID <- working_data$hybridID
+    a <- table(working_data$hybridID)
+    singlet_rate <- 1 - (( a['doublet'] + a['unassigned']) / sum(a))
+    message("Hybrid demultiplexing done! Results in hybridID")
+    return(object)
+
+  } else {
+    object$hybridID <- object@meta.data[,cellhashing_label]
+    warning_msg <- paste("Corrolation between your cell hashing demultiplexing and SNP-based demultiplexing is very poor. The convergance score is", c_score, ", which is much lower than normal. In this case, we can not trust your SNP-based demultiplexing results. We set your cell hashing ID to the hybrid labels. However, a low convergance score usually indicates high doublet rates or even messed genetic background among different samples. We highly recommand the users to double check the data.")
+    warning(warning_msg)
+    return(object)
+  }
 }

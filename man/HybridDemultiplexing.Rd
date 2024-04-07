@@ -13,7 +13,8 @@ HybridDemultiplexing(
   snp_doublet_label = "doublet",
   snp_unassign_label = "unassigned",
   cellhashing_doublet_label = "Doublet",
-  cellhashing_negative_label = "Negative"
+  cellhashing_negative_label = "Negative",
+  pair_info = NULL
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ HybridDemultiplexing(
 \item{cellhashing_doublet_label}{doublet label in cell hashing results.}
 
 \item{cellhashing_negative_label}{negative label in cell hashing results.}
+
+\item{pair_info}{Users can provide a list of paired hashtags and genotype groups. For example: pair <- list("Hashtag1" = "singlet0","Hashtag2" = "singlet1","Hashtag3" = "singlet2")}
 }
 \description{
 function for HybridDemultiplexing

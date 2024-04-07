@@ -403,10 +403,11 @@ HTOClassification <-  function(object = NULL, assay = 'HTO', method = NULL, spec
 #' @param snp_unassign_label unassigned label in SNP results.
 #' @param cellhashing_doublet_label doublet label in cell hashing results.
 #' @param cellhashing_negative_label negative label in cell hashing results.
+#' @param pair_info Users can provide a list of paired hashtags and genotype groups. For example: pair <- list("Hashtag1" = "singlet0","Hashtag2" = "singlet1","Hashtag3" = "singlet2")
 #'
 #' @export
 #'
-HybridDemultiplexing <- function(object = NULL, cellhashing_label = NULL, genotype_label = NULL, hto_names = NULL, c_threshold = 0.7, snp_doublet_label = 'doublet', snp_unassign_label = 'unassigned', cellhashing_doublet_label = 'Doublet', cellhashing_negative_label = 'Negative') {
+HybridDemultiplexing <- function(object = NULL, cellhashing_label = NULL, genotype_label = NULL, hto_names = NULL, c_threshold = 0.7, snp_doublet_label = 'doublet', snp_unassign_label = 'unassigned', cellhashing_doublet_label = 'Doublet', cellhashing_negative_label = 'Negative', pair_info = NULL) {
   # object <- DN
   # cellhashing_label <- 'bff_cluster'
   # genotype_label <- 'souporcell'
@@ -416,15 +417,6 @@ HybridDemultiplexing <- function(object = NULL, cellhashing_label = NULL, genoty
   colnames(working_data) <- c('Cellhash','Genotype')
   working_data$Cellhash <- as.character(working_data$Cellhash)
   working_data$Genotype <- as.character(working_data$Genotype)
-
-  waiting_list <- c()
-  for (hto in hto_names) {
-    if(hto %in% names(table(working_data$Cellhash))) {
-      # do nothing
-    } else {
-      waiting_list <- c(waiting_list, hto)
-    }
-  }
 
   working_data$Cellhash_cat <- 'singlet'
   working_data$Cellhash_cat[which(working_data$Cellhash == cellhashing_doublet_label)] <- 'doublet'
@@ -438,33 +430,58 @@ HybridDemultiplexing <- function(object = NULL, cellhashing_label = NULL, genoty
   working_data$Genotype[which(working_data$Genotype == snp_doublet_label)] <- 'doublet'
   working_data$Genotype[which(working_data$Genotype == snp_unassign_label)] <- 'unassigned'
 
-  # link cell hash clusters with genotype groups
   snp_singlet_index <- which(working_data$Genotype_cat == 'singlet')
   cellhash_singlet_index <- which(working_data$Cellhash_cat == 'singlet')
-  singlet_set_working_data <- working_data[intersect(snp_singlet_index, cellhash_singlet_index),]
 
-  corr_data <- table(singlet_set_working_data$Cellhash, singlet_set_working_data$Genotype)
+  if(is.null(pair_info)) {  # if not provided pair information
+    waiting_list <- c()
+    for (hto in hto_names) {
+      if(hto %in% names(table(working_data$Cellhash))) {
+        # do nothing
+      } else {
+        waiting_list <- c(waiting_list, hto)
+      }
+    }
 
-  pair_res <- list()
-  for (cellhashing_label in rownames(corr_data)) {
-    cur_row_data <- corr_data[cellhashing_label,]
-    cur_row_data <- sort(cur_row_data, decreasing = TRUE)
-    pair_res[[cellhashing_label]] <- names(cur_row_data[1])
-  }
-  if(length(waiting_list) > 1) {
-    stop("More than 1 hashtags missing!")
-  } else if (length(waiting_list) == 1) {
-    pair_res[[waiting_list[1]]] <- setdiff(colnames(corr_data), unlist(pair_res))
-    msg <- paste0('The missing HTO ',waiting_list[1], ' is assigned to ',  pair_res[[waiting_list[1]]])
-    message(msg)
+    # link cell hash clusters with genotype groups
+    singlet_set_working_data <- working_data[intersect(snp_singlet_index, cellhash_singlet_index),]
+
+    corr_data <- table(singlet_set_working_data$Cellhash, singlet_set_working_data$Genotype)
+
+    pair_res <- list()
+    current_columns <- colnames(corr_data)
+    for (cellhashing_tag in rownames(corr_data)) {
+      cur_row_data <- corr_data[cellhashing_tag, current_columns]
+      cur_row_data <- sort(cur_row_data, decreasing = TRUE)
+      pair_res[[cellhashing_tag]] <- names(cur_row_data[1])
+
+      # remove paired column names (genotype names) from the candidate list
+      current_columns <- current_columns [! current_columns %in% names(cur_row_data[1])]
+    }
+    if(length(waiting_list) > 1) {
+      stop("More than 1 hashtags missing!")
+    } else if (length(waiting_list) == 1) {
+      pair_res[[waiting_list[1]]] <- setdiff(colnames(corr_data), unlist(pair_res))
+      msg <- paste0('The missing HTO ',waiting_list[1], ' is assigned to ',  pair_res[[waiting_list[1]]])
+      message(msg)
+    }
+
+    pair_res <- unlist(pair_res)
+    info_str = 'We matched: \n'
+    for (index in c(1:length(pair_res))) {
+      info_str = paste0(info_str, names(pair_res)[index], ' with ', pair_res[index], '\n')
+    }
+    cat(info_str)
+  } else {   # if provided pair information
+    pair_res <- unlist(pair_info)
+    message('We used matching information you provided:')
+    info_str = ''
+    for (index in c(1:length(pair_res))) {
+      info_str = paste0(info_str, names(pair_res)[index], ' with ', pair_res[index], '\n')
+    }
+    cat(info_str)
   }
 
-  pair_res <- unlist(pair_res)
-  info_str = 'We matched: \n'
-  for (index in c(1:length(pair_res))) {
-    info_str = paste0(info_str, names(pair_res)[index], ' with ', pair_res[index], '\n')
-  }
-  cat(info_str)
   # update object
   for (index in c(1:length(pair_res))) {
     working_data[which(working_data$Genotype == pair_res[index]), 'Genotype'] <- names(pair_res)[index]
@@ -473,6 +490,8 @@ HybridDemultiplexing <- function(object = NULL, cellhashing_label = NULL, genoty
   # calculate convergence score
   singlet_set_working_data <- working_data[intersect(snp_singlet_index, cellhash_singlet_index),]
   c_score <- length(which(singlet_set_working_data$Cellhash == singlet_set_working_data$Genotype)) / dim(singlet_set_working_data)[1]
+  info_str <- paste0("The convergence score between cell hashing demultiplexing and SNP-based demultiplexing is: ", c_score, "\n")
+  cat(info_str)
 
   if (c_score > c_threshold) {
     working_data$hybridID <- 'unassigned'
@@ -490,7 +509,7 @@ HybridDemultiplexing <- function(object = NULL, cellhashing_label = NULL, genoty
 
   } else {
     object$hybridID <- object@meta.data[,cellhashing_label]
-    warning_msg <- paste("Corrolation between your cell hashing demultiplexing and SNP-based demultiplexing is very poor. The convergance score is", c_score, ", which is much lower than normal. In this case, we can not trust your SNP-based demultiplexing results. We set your cell hashing ID to the hybrid labels. However, a low convergance score usually indicates high doublet rates or even messed genetic background among different samples. We highly recommand the users to double check the data.")
+    warning_msg <- paste("Corrolation between your cell hashing demultiplexing and SNP-based demultiplexing is very poor. The convergence score is", c_score, ", which is much lower than normal. In this case, we can not trust your SNP-based demultiplexing results. We set your cell hashing ID to the hybrid labels. However, a low convergance score usually indicates high doublet rates or even messed genetic background among different samples. We highly recommand the users to double check the data.")
     warning(warning_msg)
     return(object)
   }

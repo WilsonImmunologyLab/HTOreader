@@ -453,11 +453,16 @@ HybridDemultiplexing <- function(object = NULL, cellhashing_label = NULL, genoty
     for (cellhashing_tag in rownames(corr_data)) {
       cur_row_data <- corr_data[cellhashing_tag, current_columns]
       cur_row_data <- sort(cur_row_data, decreasing = TRUE)
-      pair_res[[cellhashing_tag]] <- names(cur_row_data[1])
+      if(is.null(names(cur_row_data[1]))) {
+        pair_res[[cellhashing_tag]] <- current_columns[1]
+      } else {
+        pair_res[[cellhashing_tag]] <- names(cur_row_data[1])
 
-      # remove paired column names (genotype names) from the candidate list
-      current_columns <- current_columns [! current_columns %in% names(cur_row_data[1])]
+        # remove paired column names (genotype names) from the candidate list
+        current_columns <- current_columns [! current_columns %in% names(cur_row_data[1])]
+      }
     }
+
     if(length(waiting_list) > 1) {
       stop("More than 1 hashtags missing!")
     } else if (length(waiting_list) == 1) {

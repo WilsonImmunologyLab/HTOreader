@@ -120,8 +120,9 @@ plot_grid(plotlist = plots, nrow = 2)
 ## 4)integrate HTOreader, Seurat results with cellhashR results
 ```{r results='hide', message=FALSE, warning=FALSE}
 rownames(calls) <- calls$cellbarcode
-DN_hq_barcode <- names(DN@active.ident)
-DN_hq_barcode <- sub('-1','',DN_hq_barcode)
+DN_barcode <- names(DN@active.ident)
+DN_barcode <- sub('-1','',DN_barcode)
+DN_hq_barcode <- intersect(DN_barcode, calls$cellbarcode)
 
 calls_hq <- calls[DN_hq_barcode,]
 
@@ -154,42 +155,46 @@ We found two BFF models failed to identify S282.
 The best singlet rate is 83.9%,  average rate is ~80% (exlcuding BFF models due to failure of S282)
 
 # Step 4, Apply hybrid strategy: combine cell hashing demultiplexing with SNP-based method
-We then integrate our cell hashing results with souporcell genotype clusters
-```{r results='hide', message=FALSE, warning=FALSE}
-souporcell.res <- read.csv('../data/clusters.tsv', sep = '\t')
+In order to apply hybrid demultiplexing, we need to add SNP-based labels into Seurat object:
+```{r}
+# add soupercell labels into Seurat object
+souporcell.res <- read.csv('./8pool/clusters.tsv', sep = '\t')
 souporcell.res$identity <- souporcell.res$status
 souporcell.res$identity[which(souporcell.res$status == 'singlet')] <- paste0(souporcell.res$status[which(souporcell.res$status == 'singlet')], souporcell.res$assignment[which(souporcell.res$status == 'singlet')])
-rownames(souporcell.res) <- sub(pattern = '-1', replacement = '',x = souporcell.res$barcode)
-
-calls_hq$souporcell <- souporcell.res[calls_hq$cellbarcode, 'identity']
+rownames(souporcell.res) <- souporcell.res$barcode
+DN$souporcell <- souporcell.res[names(DN@active.ident), 'identity']
 ```
-
-The singlet of souporcell clustering is much higher than any cell hashing methods, however, we don't know the identify of each singlet cluster identified by souporcell.
-Singlet rate of souporcell:
+Then we reveal cell labels using hybrid demultiplexing ("HybridDemultiplexing" function in HTOreader package). In this case, we use HTOreader result for cell hashing demultiplexing
 ```{r}
-(1 - length(which(calls_hq$souporcell %in% c('doublet','unassigned'))) / length(calls_hq$souporcell)) * 100
+DN <- HybridDemultiplexing(object = DN, cellhashing_label = 'HTOid', genotype_label = 'souporcell', hto_names = c("S282","S283","S284","S344","S397","S417","S421","S423"))
 ```
 
-By identifying the corrolation between souporcell results with any cell hashing method, we're able to identify the identify of each singlet cluster identified by souporcell.
-In this dataset, singlet0 = S397, singlet1 = S344, singlet2 = S284, singlet3 = S283, singlet4 = S417, singlet5 = S423, singlet6 = S282 and singlet7 = S421. 
 ```{r}
-table(calls_hq$HTOid, calls_hq$souporcell)
+table(DN$hybridID)
 ```
 
-BTW, The Hybrid strategy is highly flexiable to cell hashing demultiplexing method and quality, it works with all cell hashing methods. 
+BTW, The Hybrid strategy is highly flexiable to cell hashing demultiplexing method and quality, it works with all cell hashing methods. For example:
 ```{r}
-table(calls_hq$multiseq, calls_hq$souporcell)
-table(calls_hq$seurat, calls_hq$souporcell)
-table(calls_hq$gmm_demux, calls_hq$souporcell)
-table(calls_hq$dropletutils, calls_hq$souporcell)
+# Hybrid demultiplexing using HTOdemux (Seurat)
+DN <- HybridDemultiplexing(object = DN, cellhashing_label = 'hash.ID', genotype_label = 'souporcell', hto_names = c("S282","S283","S284","S344","S397","S417","S421","S423"))
 ```
 
-Furthermore, The Hybrid strategy even works with two BFF models that fail to identify S282. We can see singlet6 group is not associated with any cell hashing groups, considering BFF models failed to identify S282, then singlet6 = S282
 ```{r}
-table(calls_hq$bff_raw, calls_hq$souporcell)
-table(calls_hq$bff_cluster, calls_hq$souporcell)
+table(DN$hybridID)
 ```
 
+
+Furthermore, The Hybrid strategy even works with two BFF models that fail to identify S282. HybridDemultiplexing correctly linked singlet6 with S282. 
+```{r}
+rownames(calls) <- paste0(calls$cellbarcode, '-1')
+DN$bff_cluster <- calls[names(DN@active.ident), 'bff_cluster']
+
+DN <- HybridDemultiplexing(object = DN, cellhashing_label = 'bff_cluster', genotype_label = 'souporcell', hto_names = c("S282","S283","S284","S344","S397","S417","S421","S423"))
+```
+We observe that results from hybrid runs using various cell hashing methods may exhibit minor variations. This is due to our adoption of a conservative strategy, which categorizes all Case 2/3 inconsistency as unassigned to guarantee the accuracy and precision of the outcomes. For detailed information, please refer to the Methods section of our paper.
+```{r}
+table(DN$hybridID)
+```
 
 # Step 5, hybrid demultiplexing for multiple datasets from the same group of donors (optional)
 In this case, we have 8pool-AS, which shares the same group of human donors but doesn't have cell hashing for some reason. Using Hybrid demultiplexing, we're still able to handle it.
@@ -217,7 +222,7 @@ AS <- NormalizeData(AS, assay = "ADT", normalization.method = "CLR")
 
 We ran souporcell on the entire 8pool dataset (AS + DN) so that the genotypes are across two datasets. We annotate souporcell genotype clusters to 8pool-AS dataset
 ```{r results='hide', message=FALSE, warning=FALSE}
-souporcell.res <- read.csv('../data/clusters.tsv', sep = '\t')
+souporcell.res <- read.csv('./8pool/clusters.tsv', sep = '\t')
 souporcell.res$identity <- souporcell.res$status
 souporcell.res$identity[which(souporcell.res$status == 'singlet')] <- paste0(souporcell.res$status[which(souporcell.res$status == 'singlet')], souporcell.res$assignment[which(souporcell.res$status == 'singlet')])
 rownames(souporcell.res) <- souporcell.res$barcode
@@ -234,6 +239,86 @@ Singlet rate of hybrid on 8pool-AS:
 table(AS$souporcell)
 ```
 
+# Supplementary, hybrid demultiplexing for dataset that has high doublet rate
+We have illustrated the effectiveness of hybrid demultiplexing on "high quality" data, where cell hashing and SNP-based methods are highly consistent with each other. However, there are instances where the two modalities do not align well. In such cases, our hybrid demultiplexing approach adeptly identifies significant misalignment issues via the convergence score and issues a warning to the user. Discrepancies between the two modalities often suggest a high doublet rate or a complex genetic background, necessitating careful examination by users with relevant biological expertise. To exemplify this, we use the dataset labeled '9pool-CA':
+```{r}
+DN.9pool.data <- Read10X(data.dir = "../data/9pool-CA-RNA/filtered_feature_bc_matrix/")
+DN.9pool.hto <- DN.9pool.data[["Antibody Capture"]][138:146,]
+DN.9pool.data[["Antibody Capture"]] <- DN.9pool.data[["Antibody Capture"]][1:137,]
+DN.9pool <- CreateSeuratObject(counts = DN.9pool.data$`Gene Expression`, project = "Carr")
+DN.9pool[['HTO']] <- CreateAssayObject(counts = DN.9pool.hto)
+DN.9pool$subject <- "CA"
+DN.9pool <- RenameCells(object = DN.9pool, add.cell.id = "CA")
+DN.9pool[["percent.mt"]] <- PercentageFeatureSet(object = DN.9pool, pattern = "^MT-")
+DN.9pool[["percent.ig"]] <- PercentageFeatureSet(object = DN.9pool, pattern = "^IG[HKL]")
+DN.9pool <- subset(DN.9pool, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 10)
+DN.9pool <- NormalizeData(DN.9pool, assay = "HTO", normalization.method = "CLR")
+```
+Cell hashing demultiplexing using HTOreader
+```{r}
+DN.9pool <- HTOClassification(DN.9pool, assay = 'HTO', method = 'log')
+```
+Load souporcell results. There are three runs, 1) using all cells, 2) only remove cells that expressed both B and T cell markers, 3) remove all doublet cells that identified by cell hashing
+```{r}
+# souporcell results using all cells
+sampleID <- read.table(file = '9pool/clusters.csv',header = TRUE, sep = ',', row.names = 1)
+soupID <- as.character(DN.9pool@meta.data[["orig.ident"]])
+i <- 1
+for (barcode in names(DN.9pool@active.ident)){
+  barcode1 <- gsub('^[A-Za-z]+_','',barcode)
+  if(barcode1 %in% rownames(sampleID)) {
+    soupID[i] <- sampleID[barcode1,'identity']
+  }else {
+    soupID[i] <- 'unassigned'
+  }
+  i <- i + 1
+}
+DN.9pool$soupID1 <- soupID
+
+# souporcell results on the dataset, after excluding cells that expressed both B and T cell markers
+sampleID <- read.table(file = '9pool/clusters1.csv',header = TRUE, sep = ',', row.names = 1)
+soupID <- as.character(DN.9pool@meta.data[["orig.ident"]])
+i <- 1
+for (barcode in names(DN.9pool@active.ident)){
+  barcode1 <- gsub('^[A-Za-z]+_','',barcode)
+  if(barcode1 %in% rownames(sampleID)) {
+    soupID[i] <- sampleID[barcode1,'identity']
+  }else {
+    soupID[i] <- 'unassigned'
+  }
+  i <- i + 1
+}
+DN.9pool$soupID2 <- soupID
+
+# souporcell results on the dataset, , after excluding all doublet cells that identified by cell hashing
+sampleID <- read.table(file = '9pool/clusters2.csv',header = TRUE, sep = ',', row.names = 1)
+soupID <- as.character(DN.9pool@meta.data[["orig.ident"]])
+i <- 1
+for (barcode in names(DN.9pool@active.ident)){
+  barcode1 <- gsub('^[A-Za-z]+_','',barcode)
+  if(barcode1 %in% rownames(sampleID)) {
+    soupID[i] <- sampleID[barcode1,'identity']
+  }else {
+    soupID[i] <- 'unassigned'
+  }
+  i <- i + 1
+}
+DN.9pool$soupID3 <- soupID
+```
+
+We then run HybridDemultiplexing for using all three genotype labels. 
+For soupID1, a low convergence score was identified, and a warning was poped. HybridID was set to the cell hashing labels cause the genotype labels are not accurate. 
+```{r}
+DN.9pool <- HybridDemultiplexing(object = DN.9pool, cellhashing_label = 'HTOid', genotype_label = 'soupID1', hto_names = DN.9pool.hto@Dimnames[[1]])
+```
+For soupID2, the convergence score was improved, but still too low. HybridID was set to the cell hashing labels cause the genotype labels are not accurate. 
+```{r}
+DN.9pool <- HybridDemultiplexing(object = DN.9pool, cellhashing_label = 'HTOid', genotype_label = 'soupID2', hto_names = DN.9pool.hto@Dimnames[[1]])
+```
+For soupID3, the convergence score was highly improved. HybridID was determined by both genotype labels and cell hashing labels. 
+```{r}
+DN.9pool <- HybridDemultiplexing(object = DN.9pool, cellhashing_label = 'HTOid', genotype_label = 'soupID3', hto_names = DN.9pool.hto@Dimnames[[1]])
+```
 
 Session info
 ```{r}

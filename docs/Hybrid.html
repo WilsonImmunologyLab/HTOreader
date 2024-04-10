@@ -12,7 +12,7 @@
 
 <meta name="author" content="Lei Li lei.li@stjude.org" />
 
-<meta name="date" content="2024-02-02" />
+<meta name="date" content="2024-04-10" />
 
 <title>Using hybrid demultiplexing strategy for cell hashing datasets</title>
 
@@ -151,7 +151,7 @@ code span.ot { color: #007020; }
 <h1 class="title toc-ignore project-name">Using hybrid demultiplexing
 strategy for cell hashing datasets</h1>
 <h4 class="author project-author">Lei Li <a href="mailto:lei.li@stjude.org" class="email">lei.li@stjude.org</a></h4>
-<h4 class="date project-date">2024-02-02</h4>
+<h4 class="date project-date">2024-04-10</h4>
 </section>
 
 
@@ -247,18 +247,19 @@ this step)</p>
 <div id="integrate-htoreader-seurat-results-with-cellhashr-results" class="section level2">
 <h2>4)integrate HTOreader, Seurat results with cellhashR results</h2>
 <div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(calls) <span class="ot">&lt;-</span> calls<span class="sc">$</span>cellbarcode</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>DN_hq_barcode <span class="ot">&lt;-</span> <span class="fu">names</span>(DN<span class="sc">@</span>active.ident)</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>DN_hq_barcode <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">&quot;-1&quot;</span>, <span class="st">&quot;&quot;</span>, DN_hq_barcode)</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>calls_hq <span class="ot">&lt;-</span> calls[DN_hq_barcode, ]</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>HTOid.hq <span class="ot">&lt;-</span> DN<span class="sc">$</span>HTOid</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(HTOid.hq) <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">&quot;-1&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="fu">names</span>(HTOid.hq))</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>calls_hq<span class="sc">$</span>HTOid <span class="ot">&lt;-</span> HTOid.hq[<span class="fu">rownames</span>(calls_hq)]</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>Seuratid.hq <span class="ot">&lt;-</span> DN<span class="sc">$</span>hash.ID</span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(Seuratid.hq) <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">&quot;-1&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="fu">names</span>(Seuratid.hq))</span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>calls_hq<span class="sc">$</span>seurat <span class="ot">&lt;-</span> <span class="fu">as.character</span>(Seuratid.hq[<span class="fu">rownames</span>(calls_hq)])</span></code></pre></div>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>DN_barcode <span class="ot">&lt;-</span> <span class="fu">names</span>(DN<span class="sc">@</span>active.ident)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>DN_barcode <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">&quot;-1&quot;</span>, <span class="st">&quot;&quot;</span>, DN_barcode)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>DN_hq_barcode <span class="ot">&lt;-</span> <span class="fu">intersect</span>(DN_barcode, calls<span class="sc">$</span>cellbarcode)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>calls_hq <span class="ot">&lt;-</span> calls[DN_hq_barcode, ]</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>HTOid.hq <span class="ot">&lt;-</span> DN<span class="sc">$</span>HTOid</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(HTOid.hq) <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">&quot;-1&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="fu">names</span>(HTOid.hq))</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>calls_hq<span class="sc">$</span>HTOid <span class="ot">&lt;-</span> HTOid.hq[<span class="fu">rownames</span>(calls_hq)]</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>Seuratid.hq <span class="ot">&lt;-</span> DN<span class="sc">$</span>hash.ID</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(Seuratid.hq) <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">&quot;-1&quot;</span>, <span class="st">&quot;&quot;</span>, <span class="fu">names</span>(Seuratid.hq))</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>calls_hq<span class="sc">$</span>seurat <span class="ot">&lt;-</span> <span class="fu">as.character</span>(Seuratid.hq[<span class="fu">rownames</span>(calls_hq)])</span></code></pre></div>
 <div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>res_table <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="at">data =</span> <span class="fu">c</span>(<span class="fu">table</span>(calls_hq<span class="sc">$</span>multiseq), <span class="fu">table</span>(calls_hq<span class="sc">$</span>gmm_demux),</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">table</span>(calls_hq<span class="sc">$</span>bff_raw), <span class="fu">table</span>(calls_hq<span class="sc">$</span>bff_cluster), <span class="fu">table</span>(calls_hq<span class="sc">$</span>dropletutils),</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">table</span>(calls_hq<span class="sc">$</span>HTOid), <span class="fu">table</span>(calls_hq<span class="sc">$</span>seurat)), <span class="at">nrow =</span> <span class="dv">7</span>, <span class="at">ncol =</span> <span class="dv">10</span>, <span class="at">byrow =</span> <span class="cn">TRUE</span>,</span>
@@ -275,7 +276,7 @@ this step)</p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>final_table</span></code></pre></div>
 <pre><code>##                  Doublet Negative S282 S283 S284 S344 S397 S417 S421 S423
 ## multiseq            2103      160  312 1738 1546 1548 1866 1196  780 1635
-## gmm_demux           3038       27  310 1643 1445 1431 1533 1146  691 1620
+## gmm_demux           2631       27  310 1696 1498 1483 1706 1165  730 1638
 ## bff_raw             1673      579    0 1786 1515 1585 2094 1179  794 1679
 ## bff_cluster          456      404    0 2011 1713 1771 2380 1376  890 1883
 ## dropletutils        1801      599  267 1769 1463 1512 1953 1184  791 1545
@@ -283,7 +284,7 @@ this step)</p>
 ## htodemux(Seurat)    2759      125  302 1698 1389 1476 1635 1148  727 1625
 ##                  singlet singlet rate
 ## multiseq           10621    0.8243558
-## gmm_demux           9819    0.7621080
+## gmm_demux          10226    0.7936976
 ## bff_raw            10632    0.8252096
 ## bff_cluster        12024    0.9332505
 ## dropletutils       10484    0.8137224
@@ -297,208 +298,92 @@ of S282)</p>
 <div id="step-4-apply-hybrid-strategy-combine-cell-hashing-demultiplexing-with-snp-based-method" class="section level1">
 <h1>Step 4, Apply hybrid strategy: combine cell hashing demultiplexing
 with SNP-based method</h1>
-<p>We then integrate our cell hashing results with souporcell genotype
-clusters</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>souporcell.res <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;./8pool/clusters.tsv&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;</span><span class="sc">\t</span><span class="st">&quot;</span>)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>souporcell.res<span class="sc">$</span>identity <span class="ot">&lt;-</span> souporcell.res<span class="sc">$</span>status</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>souporcell.res<span class="sc">$</span>identity[<span class="fu">which</span>(souporcell.res<span class="sc">$</span>status <span class="sc">==</span> <span class="st">&quot;singlet&quot;</span>)] <span class="ot">&lt;-</span> <span class="fu">paste0</span>(souporcell.res<span class="sc">$</span>status[<span class="fu">which</span>(souporcell.res<span class="sc">$</span>status <span class="sc">==</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;singlet&quot;</span>)], souporcell.res<span class="sc">$</span>assignment[<span class="fu">which</span>(souporcell.res<span class="sc">$</span>status <span class="sc">==</span> <span class="st">&quot;singlet&quot;</span>)])</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(souporcell.res) <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="at">pattern =</span> <span class="st">&quot;-1&quot;</span>, <span class="at">replacement =</span> <span class="st">&quot;&quot;</span>, <span class="at">x =</span> souporcell.res<span class="sc">$</span>barcode)</span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>calls_hq<span class="sc">$</span>souporcell <span class="ot">&lt;-</span> souporcell.res[calls_hq<span class="sc">$</span>cellbarcode, <span class="st">&quot;identity&quot;</span>]</span></code></pre></div>
-<p>The singlet of souporcell clustering is much higher than any cell
-hashing methods, however, we don’t know the identify of each singlet
-cluster identified by souporcell. Singlet rate of souporcell:</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="sc">-</span> <span class="fu">length</span>(<span class="fu">which</span>(calls_hq<span class="sc">$</span>souporcell <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;doublet&quot;</span>, <span class="st">&quot;unassigned&quot;</span>)))<span class="sc">/</span><span class="fu">length</span>(calls_hq<span class="sc">$</span>souporcell)) <span class="sc">*</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="dv">100</span></span></code></pre></div>
-<pre><code>## [1] 89.64768</code></pre>
-<p>By identifying the corrolation between souporcell results with any
-cell hashing method, we’re able to identify the identify of each singlet
-cluster identified by souporcell. In this dataset, singlet0 = S397,
-singlet1 = S344, singlet2 = S284, singlet3 = S283, singlet4 = S417,
-singlet5 = S423, singlet6 = S282 and singlet7 = S421.</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(calls_hq<span class="sc">$</span>HTOid, calls_hq<span class="sc">$</span>souporcell)</span></code></pre></div>
-<pre><code>##           
-##            doublet singlet0 singlet1 singlet2 singlet3 singlet4 singlet5
-##   Doublet     1173      166       80       88      103       70       82
-##   Negative       4       31        4       49        8       28       23
-##   S282          54        0        0        0        0        1        0
-##   S283          20        0        1        1     1748        0        0
-##   S284           9        0        0     1492        0        1        0
-##   S344          21        0     1528        0        1        2        0
-##   S397           8     2046        0        0        0        0        0
-##   S417          15        0        0        0        1     1153        1
-##   S421           4        0        0        0        0        0        0
-##   S423          18        0        0        0        0        0     1644
-##           
-##            singlet6 singlet7 unassigned
-##   Doublet        51       75          5
-##   Negative       17        6          0
-##   S282          210       51          1
-##   S283            1        0          0
-##   S284            0        0          0
-##   S344            8        0          0
-##   S397            1        0          0
-##   S417            2        0          2
-##   S421            0      776          0
-##   S423            0        0          0</code></pre>
+<p>In order to apply hybrid demultiplexing, we need to add SNP-based
+labels into Seurat object:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># add soupercell labels into Seurat object</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>souporcell.res <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;./8pool/clusters.tsv&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;</span><span class="sc">\t</span><span class="st">&quot;</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>souporcell.res<span class="sc">$</span>identity <span class="ot">&lt;-</span> souporcell.res<span class="sc">$</span>status</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>souporcell.res<span class="sc">$</span>identity[<span class="fu">which</span>(souporcell.res<span class="sc">$</span>status <span class="sc">==</span> <span class="st">&quot;singlet&quot;</span>)] <span class="ot">&lt;-</span> <span class="fu">paste0</span>(souporcell.res<span class="sc">$</span>status[<span class="fu">which</span>(souporcell.res<span class="sc">$</span>status <span class="sc">==</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;singlet&quot;</span>)], souporcell.res<span class="sc">$</span>assignment[<span class="fu">which</span>(souporcell.res<span class="sc">$</span>status <span class="sc">==</span> <span class="st">&quot;singlet&quot;</span>)])</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(souporcell.res) <span class="ot">&lt;-</span> souporcell.res<span class="sc">$</span>barcode</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>DN<span class="sc">$</span>souporcell <span class="ot">&lt;-</span> souporcell.res[<span class="fu">names</span>(DN<span class="sc">@</span>active.ident), <span class="st">&quot;identity&quot;</span>]</span></code></pre></div>
+<p>Then we reveal cell labels using hybrid demultiplexing
+(“HybridDemultiplexing” function in HTOreader package). In this case, we
+use HTOreader result for cell hashing demultiplexing</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>DN <span class="ot">&lt;-</span> <span class="fu">HybridDemultiplexing</span>(<span class="at">object =</span> DN, <span class="at">cellhashing_label =</span> <span class="st">&quot;HTOid&quot;</span>, <span class="at">genotype_label =</span> <span class="st">&quot;souporcell&quot;</span>,</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">hto_names =</span> <span class="fu">c</span>(<span class="st">&quot;S282&quot;</span>, <span class="st">&quot;S283&quot;</span>, <span class="st">&quot;S284&quot;</span>, <span class="st">&quot;S344&quot;</span>, <span class="st">&quot;S397&quot;</span>, <span class="st">&quot;S417&quot;</span>, <span class="st">&quot;S421&quot;</span>, <span class="st">&quot;S423&quot;</span>))</span></code></pre></div>
+<pre><code>## We matched: 
+## S282 with singlet6
+## S283 with singlet3
+## S284 with singlet2
+## S344 with singlet1
+## S397 with singlet0
+## S417 with singlet4
+## S421 with singlet7
+## S423 with singlet5
+## The convergence score between cell hashing demultiplexing and SNP-based demultiplexing is: 0.993251476239573</code></pre>
+<pre><code>## Hybrid demultiplexing done! Results in hybridID</code></pre>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(DN<span class="sc">$</span>hybridID)</span></code></pre></div>
+<pre><code>## 
+##    doublet       S282       S283       S284       S344       S397       S417 
+##       1173        278       1859       1629       1613       2243       1252 
+##       S421       S423 unassigned 
+##        857       1749        233</code></pre>
 <p>BTW, The Hybrid strategy is highly flexiable to cell hashing
 demultiplexing method and quality, it works with all cell hashing
-methods.</p>
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(calls_hq<span class="sc">$</span>multiseq, calls_hq<span class="sc">$</span>souporcell)</span></code></pre></div>
-<pre><code>##           
-##            doublet singlet0 singlet1 singlet2 singlet3 singlet4 singlet5
-##   Doublet     1181      324       92       91      119       76       82
-##   Negative       4       61        4        3       25        5       43
-##   S282          48        0        0        0        0        0        1
-##   S283          21        0        1        0     1715        0        0
-##   S284           9        0        0     1536        0        0        0
-##   S344          22        0     1516        0        1        0        1
-##   S397           8     1857        0        0        0        0        1
-##   S417          15        1        0        0        1     1174        1
-##   S421           4        0        0        0        0        0        0
-##   S423          14        0        0        0        0        0     1621
-##           
-##            singlet6 singlet7 unassigned
-##   Doublet        51       82          5
-##   Negative       14        1          0
-##   S282          213       49          1
-##   S283            1        0          0
-##   S284            1        0          0
-##   S344            8        0          0
-##   S397            0        0          0
-##   S417            2        0          2
-##   S421            0      776          0
-##   S423            0        0          0</code></pre>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(calls_hq<span class="sc">$</span>seurat, calls_hq<span class="sc">$</span>souporcell)</span></code></pre></div>
-<pre><code>##           
-##            doublet singlet0 singlet1 singlet2 singlet3 singlet4 singlet5
-##   Doublet     1213      588      163      167      176      123      125
-##   Negative       4       27        0       76        1        4       12
-##   S282          37        0        0        1        0        0        0
-##   S283          14        0        0        1     1682        0        0
-##   S284           4        0        0     1385        0        0        0
-##   S344          18        0     1450        0        1        0        0
-##   S397           7     1627        0        0        0        0        0
-##   S417          13        1        0        0        1     1128        1
-##   S421           3        0        0        0        0        0        0
-##   S423          13        0        0        0        0        0     1612
-##           
-##            singlet6 singlet7 unassigned
-##   Doublet        58      141          5
-##   Negative        1        0          0
-##   S282          220       43          1
-##   S283            1        0          0
-##   S284            0        0          0
-##   S344            7        0          0
-##   S397            1        0          0
-##   S417            2        0          2
-##   S421            0      724          0
-##   S423            0        0          0</code></pre>
-<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(calls_hq<span class="sc">$</span>gmm_demux, calls_hq<span class="sc">$</span>souporcell)</span></code></pre></div>
-<pre><code>##           
-##            doublet singlet0 singlet1 singlet2 singlet3 singlet4 singlet5
-##   Doublet     1219      707      205      186      225      123      135
-##   Negative       4        9        0        5        2        1        6
-##   S282          44        0        0        0        0        0        0
-##   S283           9        0        1        0     1632        0        0
-##   S284           5        0        0     1439        0        0        0
-##   S344          16        0     1407        0        1        0        0
-##   S397           6     1527        0        0        0        0        0
-##   S417          10        0        0        0        1     1131        1
-##   S421           1        0        0        0        0        0        0
-##   S423          12        0        0        0        0        0     1608
-##           
-##            singlet6 singlet7 unassigned
-##   Doublet        60      173          5
-##   Negative        0        0          0
-##   S282          220       45          1
-##   S283            1        0          0
-##   S284            1        0          0
-##   S344            7        0          0
-##   S397            0        0          0
-##   S417            1        0          2
-##   S421            0      690          0
-##   S423            0        0          0</code></pre>
-<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(calls_hq<span class="sc">$</span>dropletutils, calls_hq<span class="sc">$</span>souporcell)</span></code></pre></div>
-<pre><code>##           
-##            doublet singlet0 singlet1 singlet2 singlet3 singlet4 singlet5
-##   Doublet     1132       92       92       98      102       76       94
-##   Negative      37      225       38       77       12       13      124
-##   S282          53        0        0        0        0        0        0
-##   S283          20        1        1        0     1746        0        0
-##   S284           6        1        0     1455        0        0        0
-##   S344          21        0     1482        0        0        0        0
-##   S397          26     1924        0        0        0        0        0
-##   S417          12        0        0        0        1     1166        1
-##   S421           5        0        0        0        0        0        0
-##   S423          14        0        0        0        0        0     1531
-##           
-##            singlet6 singlet7 unassigned
-##   Doublet        44       66          5
-##   Negative       69        3          1
-##   S282          161       53          0
-##   S283            1        0          0
-##   S284            1        0          0
-##   S344            9        0          0
-##   S397            3        0          0
-##   S417            2        0          2
-##   S421            0      786          0
-##   S423            0        0          0</code></pre>
+methods. For example:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Hybrid demultiplexing using HTOdemux (Seurat)</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>DN <span class="ot">&lt;-</span> <span class="fu">HybridDemultiplexing</span>(<span class="at">object =</span> DN, <span class="at">cellhashing_label =</span> <span class="st">&quot;hash.ID&quot;</span>, <span class="at">genotype_label =</span> <span class="st">&quot;souporcell&quot;</span>,</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">hto_names =</span> <span class="fu">c</span>(<span class="st">&quot;S282&quot;</span>, <span class="st">&quot;S283&quot;</span>, <span class="st">&quot;S284&quot;</span>, <span class="st">&quot;S344&quot;</span>, <span class="st">&quot;S397&quot;</span>, <span class="st">&quot;S417&quot;</span>, <span class="st">&quot;S421&quot;</span>, <span class="st">&quot;S423&quot;</span>))</span></code></pre></div>
+<pre><code>## We matched: 
+## S282 with singlet6
+## S283 with singlet3
+## S284 with singlet2
+## S344 with singlet1
+## S397 with singlet0
+## S417 with singlet4
+## S421 with singlet7
+## S423 with singlet5
+## The convergence score between cell hashing demultiplexing and SNP-based demultiplexing is: 0.993932038834951</code></pre>
+<pre><code>## Hybrid demultiplexing done! Results in hybridID</code></pre>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(DN<span class="sc">$</span>hybridID)</span></code></pre></div>
+<pre><code>## 
+##    doublet       S282       S283       S284       S344       S397       S417 
+##       1213        279       1859       1628       1614       2242       1256 
+##       S421       S423 unassigned 
+##        865       1749        181</code></pre>
 <p>Furthermore, The Hybrid strategy even works with two BFF models that
-fail to identify S282. We can see singlet6 group is not associated with
-any cell hashing groups, considering BFF models failed to identify S282,
-then singlet6 = S282</p>
-<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(calls_hq<span class="sc">$</span>bff_raw, calls_hq<span class="sc">$</span>souporcell)</span></code></pre></div>
-<pre><code>##           
-##            doublet singlet0 singlet1 singlet2 singlet3 singlet4 singlet5
-##   Doublet     1083      134       65       79       93       59       71
-##   Negative      60       45       10       66       20       54       37
-##   S282           0        0        0        0        0        0        0
-##   S283          34        0        1        1     1746        0        0
-##   S284          28        0        0     1484        0        1        0
-##   S344          34        0     1537        0        1        2        0
-##   S397          21     2064        0        0        0        0        0
-##   S417          29        0        0        0        1     1139        1
-##   S421           5        0        0        0        0        0        0
-##   S423          32        0        0        0        0        0     1641
-##           
-##            singlet6 singlet7 unassigned
-##   Doublet        25       59          5
-##   Negative      227       59          1
-##   S282            0        0          0
-##   S283            4        0          0
-##   S284            1        1          0
-##   S344           11        0          0
-##   S397            7        2          0
-##   S417            7        0          2
-##   S421            2      787          0
-##   S423            6        0          0</code></pre>
-<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(calls_hq<span class="sc">$</span>bff_cluster, calls_hq<span class="sc">$</span>souporcell)</span></code></pre></div>
-<pre><code>##           
-##            doublet singlet0 singlet1 singlet2 singlet3 singlet4 singlet5
-##   Doublet      311       23       13       18       29       13       21
-##   Negative      53       16        0       30        3       15       12
-##   S282           0        0        0        0        0        0        0
-##   S283         175        3        5        3     1814        3        0
-##   S284         130        5        1     1567        3        1        0
-##   S344         151        4     1586        1        5        4        3
-##   S397         168     2183        3        3        1        2        3
-##   S417         139        2        1        2        3     1212        2
-##   S421          48        0        1        4        1        2        5
-##   S423         151        7        3        2        2        3     1704
-##           
-##            singlet6 singlet7 unassigned
-##   Doublet        12       15          1
-##   Negative      223       51          1
-##   S282            0        0          0
-##   S283            5        1          2
-##   S284            1        3          2
-##   S344           17        0          0
-##   S397           11        6          0
-##   S417           10        3          2
-##   S421            2      827          0
-##   S423            9        2          0</code></pre>
+fail to identify S282. HybridDemultiplexing correctly linked singlet6
+with S282.</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(calls) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(calls<span class="sc">$</span>cellbarcode, <span class="st">&quot;-1&quot;</span>)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>DN<span class="sc">$</span>bff_cluster <span class="ot">&lt;-</span> calls[<span class="fu">names</span>(DN<span class="sc">@</span>active.ident), <span class="st">&quot;bff_cluster&quot;</span>]</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>DN <span class="ot">&lt;-</span> <span class="fu">HybridDemultiplexing</span>(<span class="at">object =</span> DN, <span class="at">cellhashing_label =</span> <span class="st">&quot;bff_cluster&quot;</span>, <span class="at">genotype_label =</span> <span class="st">&quot;souporcell&quot;</span>,</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">hto_names =</span> <span class="fu">c</span>(<span class="st">&quot;S282&quot;</span>, <span class="st">&quot;S283&quot;</span>, <span class="st">&quot;S284&quot;</span>, <span class="st">&quot;S344&quot;</span>, <span class="st">&quot;S397&quot;</span>, <span class="st">&quot;S417&quot;</span>, <span class="st">&quot;S421&quot;</span>, <span class="st">&quot;S423&quot;</span>))</span></code></pre></div>
+<pre><code>## The missing HTO S282 is assigned to singlet6</code></pre>
+<pre><code>## We matched: 
+## S283 with singlet3
+## S284 with singlet2
+## S344 with singlet1
+## S397 with singlet0
+## S417 with singlet4
+## S421 with singlet7
+## S423 with singlet5
+## S282 with singlet6
+## The convergence score between cell hashing demultiplexing and SNP-based demultiplexing is: 0.985078676071622</code></pre>
+<pre><code>## Hybrid demultiplexing done! Results in hybridID</code></pre>
+<p>We observe that results from hybrid runs using various cell hashing
+methods may exhibit minor variations. This is due to our adoption of a
+conservative strategy, which categorizes all Case 2/3 inconsistency as
+unassigned to guarantee the accuracy and precision of the outcomes. For
+detailed information, please refer to the Methods section of our
+paper.</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(DN<span class="sc">$</span>hybridID)</span></code></pre></div>
+<pre><code>## 
+##    doublet       S282       S283       S284       S344       S397       S417 
+##        311        235       1846       1615       1599       2222       1240 
+##       S421       S423 unassigned 
+##        893       1737       1188</code></pre>
 </div>
 <div id="step-5-hybrid-demultiplexing-for-multiple-datasets-from-the-same-group-of-donors-optional" class="section level1">
 <h1>Step 5, hybrid demultiplexing for multiple datasets from the same
@@ -552,8 +437,163 @@ hashing due to they share the same channel(Antibody Capture)</p>
 ##        416        391        868         71        130        447         28 
 ##   singlet6   singlet7 unassigned 
 ##        118        232          5</code></pre>
+</div>
+<div id="supplementary-hybrid-demultiplexing-for-dataset-that-has-high-doublet-rate" class="section level1">
+<h1>Supplementary, hybrid demultiplexing for dataset that has high
+doublet rate</h1>
+<p>We have illustrated the effectiveness of hybrid demultiplexing on
+“high quality” data, where cell hashing and SNP-based methods are highly
+consistent with each other. However, there are instances where the two
+modalities do not align well. In such cases, our hybrid demultiplexing
+approach adeptly identifies significant misalignment issues via the
+convergence score and issues a warning to the user. Discrepancies
+between the two modalities often suggest a high doublet rate or a
+complex genetic background, necessitating careful examination by users
+with relevant biological expertise. To exemplify this, we use the
+dataset labeled ‘9pool-CA’:</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>DN<span class="fl">.9</span>pool.data <span class="ot">&lt;-</span> <span class="fu">Read10X</span>(<span class="at">data.dir =</span> <span class="st">&quot;../data/9pool-CA-RNA/filtered_feature_bc_matrix/&quot;</span>)</span></code></pre></div>
+<pre><code>## 10X data contains more than one type and is being returned as a list containing matrices of each type.</code></pre>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>DN<span class="fl">.9</span>pool.hto <span class="ot">&lt;-</span> DN<span class="fl">.9</span>pool.data[[<span class="st">&quot;Antibody Capture&quot;</span>]][<span class="dv">138</span><span class="sc">:</span><span class="dv">146</span>, ]</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>DN<span class="fl">.9</span>pool.data[[<span class="st">&quot;Antibody Capture&quot;</span>]] <span class="ot">&lt;-</span> DN<span class="fl">.9</span>pool.data[[<span class="st">&quot;Antibody Capture&quot;</span>]][<span class="dv">1</span><span class="sc">:</span><span class="dv">137</span>,</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>DN<span class="fl">.9</span>pool <span class="ot">&lt;-</span> <span class="fu">CreateSeuratObject</span>(<span class="at">counts =</span> DN<span class="fl">.9</span>pool.data<span class="sc">$</span><span class="st">`</span><span class="at">Gene Expression</span><span class="st">`</span>, <span class="at">project =</span> <span class="st">&quot;Carr&quot;</span>)</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>DN<span class="fl">.9</span>pool[[<span class="st">&quot;HTO&quot;</span>]] <span class="ot">&lt;-</span> <span class="fu">CreateAssayObject</span>(<span class="at">counts =</span> DN<span class="fl">.9</span>pool.hto)</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>DN<span class="fl">.9</span>pool<span class="sc">$</span>subject <span class="ot">&lt;-</span> <span class="st">&quot;CA&quot;</span></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>DN<span class="fl">.9</span>pool <span class="ot">&lt;-</span> <span class="fu">RenameCells</span>(<span class="at">object =</span> DN<span class="fl">.9</span>pool, <span class="at">add.cell.id =</span> <span class="st">&quot;CA&quot;</span>)</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>DN<span class="fl">.9</span>pool[[<span class="st">&quot;percent.mt&quot;</span>]] <span class="ot">&lt;-</span> <span class="fu">PercentageFeatureSet</span>(<span class="at">object =</span> DN<span class="fl">.9</span>pool, <span class="at">pattern =</span> <span class="st">&quot;^MT-&quot;</span>)</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>DN<span class="fl">.9</span>pool[[<span class="st">&quot;percent.ig&quot;</span>]] <span class="ot">&lt;-</span> <span class="fu">PercentageFeatureSet</span>(<span class="at">object =</span> DN<span class="fl">.9</span>pool, <span class="at">pattern =</span> <span class="st">&quot;^IG[HKL]&quot;</span>)</span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>DN<span class="fl">.9</span>pool <span class="ot">&lt;-</span> <span class="fu">subset</span>(DN<span class="fl">.9</span>pool, <span class="at">subset =</span> nFeature_RNA <span class="sc">&gt;</span> <span class="dv">200</span> <span class="sc">&amp;</span> nFeature_RNA <span class="sc">&lt;</span> <span class="dv">2500</span> <span class="sc">&amp;</span></span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>    percent.mt <span class="sc">&lt;</span> <span class="dv">10</span>)</span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>DN<span class="fl">.9</span>pool <span class="ot">&lt;-</span> <span class="fu">NormalizeData</span>(DN<span class="fl">.9</span>pool, <span class="at">assay =</span> <span class="st">&quot;HTO&quot;</span>, <span class="at">normalization.method =</span> <span class="st">&quot;CLR&quot;</span>)</span></code></pre></div>
+<pre><code>## Normalizing across features</code></pre>
+<p>Cell hashing demultiplexing using HTOreader</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>DN<span class="fl">.9</span>pool <span class="ot">&lt;-</span> <span class="fu">HTOClassification</span>(DN<span class="fl">.9</span>pool, <span class="at">assay =</span> <span class="st">&quot;HTO&quot;</span>, <span class="at">method =</span> <span class="st">&quot;log&quot;</span>)</span></code></pre></div>
+<pre><code>## Normalization method is:  log 
+## Cutoff for  S289 is 3.35181680088473 
+## Cutoff for  S297 is 4.30147252317663 
+## Cutoff for  S299 is 3.97183902805626 
+## Cutoff for  S302 is 3.83673446295452 
+## Cutoff for  S354 is 3.90049907157204 
+## Cutoff for  S365 is 2.71044460199379 
+## Cutoff for  S374 is 2.86249365243517 
+## Cutoff for  S403 is 2.65461369188085 
+## Cutoff for  S409 is 3.21699969089809</code></pre>
+<p>Load souporcell results. There are three runs, 1) using all cells, 2)
+only remove cells that expressed both B and T cell markers, 3) remove
+all doublet cells that identified by cell hashing</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># souporcell results using all cells</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>sampleID <span class="ot">&lt;-</span> <span class="fu">read.table</span>(<span class="at">file =</span> <span class="st">&quot;9pool/clusters.csv&quot;</span>, <span class="at">header =</span> <span class="cn">TRUE</span>, <span class="at">sep =</span> <span class="st">&quot;,&quot;</span>, <span class="at">row.names =</span> <span class="dv">1</span>)</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>soupID <span class="ot">&lt;-</span> <span class="fu">as.character</span>(DN<span class="fl">.9</span>pool<span class="sc">@</span>meta.data[[<span class="st">&quot;orig.ident&quot;</span>]])</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>i <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (barcode <span class="cf">in</span> <span class="fu">names</span>(DN<span class="fl">.9</span>pool<span class="sc">@</span>active.ident)) {</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>    barcode1 <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">&quot;^[A-Za-z]+_&quot;</span>, <span class="st">&quot;&quot;</span>, barcode)</span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (barcode1 <span class="sc">%in%</span> <span class="fu">rownames</span>(sampleID)) {</span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>        soupID[i] <span class="ot">&lt;-</span> sampleID[barcode1, <span class="st">&quot;identity&quot;</span>]</span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a>        soupID[i] <span class="ot">&lt;-</span> <span class="st">&quot;unassigned&quot;</span></span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a>    i <span class="ot">&lt;-</span> i <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb47-13"><a href="#cb47-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb47-14"><a href="#cb47-14" aria-hidden="true" tabindex="-1"></a>DN<span class="fl">.9</span>pool<span class="sc">$</span>soupID1 <span class="ot">&lt;-</span> soupID</span>
+<span id="cb47-15"><a href="#cb47-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-16"><a href="#cb47-16" aria-hidden="true" tabindex="-1"></a><span class="co"># souporcell results on the dataset, after excluding cells that expressed both</span></span>
+<span id="cb47-17"><a href="#cb47-17" aria-hidden="true" tabindex="-1"></a><span class="co"># B and T cell markers</span></span>
+<span id="cb47-18"><a href="#cb47-18" aria-hidden="true" tabindex="-1"></a>sampleID <span class="ot">&lt;-</span> <span class="fu">read.table</span>(<span class="at">file =</span> <span class="st">&quot;9pool/clusters1.csv&quot;</span>, <span class="at">header =</span> <span class="cn">TRUE</span>, <span class="at">sep =</span> <span class="st">&quot;,&quot;</span>, <span class="at">row.names =</span> <span class="dv">1</span>)</span>
+<span id="cb47-19"><a href="#cb47-19" aria-hidden="true" tabindex="-1"></a>soupID <span class="ot">&lt;-</span> <span class="fu">as.character</span>(DN<span class="fl">.9</span>pool<span class="sc">@</span>meta.data[[<span class="st">&quot;orig.ident&quot;</span>]])</span>
+<span id="cb47-20"><a href="#cb47-20" aria-hidden="true" tabindex="-1"></a>i <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb47-21"><a href="#cb47-21" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (barcode <span class="cf">in</span> <span class="fu">names</span>(DN<span class="fl">.9</span>pool<span class="sc">@</span>active.ident)) {</span>
+<span id="cb47-22"><a href="#cb47-22" aria-hidden="true" tabindex="-1"></a>    barcode1 <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">&quot;^[A-Za-z]+_&quot;</span>, <span class="st">&quot;&quot;</span>, barcode)</span>
+<span id="cb47-23"><a href="#cb47-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (barcode1 <span class="sc">%in%</span> <span class="fu">rownames</span>(sampleID)) {</span>
+<span id="cb47-24"><a href="#cb47-24" aria-hidden="true" tabindex="-1"></a>        soupID[i] <span class="ot">&lt;-</span> sampleID[barcode1, <span class="st">&quot;identity&quot;</span>]</span>
+<span id="cb47-25"><a href="#cb47-25" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb47-26"><a href="#cb47-26" aria-hidden="true" tabindex="-1"></a>        soupID[i] <span class="ot">&lt;-</span> <span class="st">&quot;unassigned&quot;</span></span>
+<span id="cb47-27"><a href="#cb47-27" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb47-28"><a href="#cb47-28" aria-hidden="true" tabindex="-1"></a>    i <span class="ot">&lt;-</span> i <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb47-29"><a href="#cb47-29" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb47-30"><a href="#cb47-30" aria-hidden="true" tabindex="-1"></a>DN<span class="fl">.9</span>pool<span class="sc">$</span>soupID2 <span class="ot">&lt;-</span> soupID</span>
+<span id="cb47-31"><a href="#cb47-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-32"><a href="#cb47-32" aria-hidden="true" tabindex="-1"></a><span class="co"># souporcell results on the dataset, , after excluding all doublet cells that</span></span>
+<span id="cb47-33"><a href="#cb47-33" aria-hidden="true" tabindex="-1"></a><span class="co"># identified by cell hashing</span></span>
+<span id="cb47-34"><a href="#cb47-34" aria-hidden="true" tabindex="-1"></a>sampleID <span class="ot">&lt;-</span> <span class="fu">read.table</span>(<span class="at">file =</span> <span class="st">&quot;9pool/clusters2.csv&quot;</span>, <span class="at">header =</span> <span class="cn">TRUE</span>, <span class="at">sep =</span> <span class="st">&quot;,&quot;</span>, <span class="at">row.names =</span> <span class="dv">1</span>)</span>
+<span id="cb47-35"><a href="#cb47-35" aria-hidden="true" tabindex="-1"></a>soupID <span class="ot">&lt;-</span> <span class="fu">as.character</span>(DN<span class="fl">.9</span>pool<span class="sc">@</span>meta.data[[<span class="st">&quot;orig.ident&quot;</span>]])</span>
+<span id="cb47-36"><a href="#cb47-36" aria-hidden="true" tabindex="-1"></a>i <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb47-37"><a href="#cb47-37" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (barcode <span class="cf">in</span> <span class="fu">names</span>(DN<span class="fl">.9</span>pool<span class="sc">@</span>active.ident)) {</span>
+<span id="cb47-38"><a href="#cb47-38" aria-hidden="true" tabindex="-1"></a>    barcode1 <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">&quot;^[A-Za-z]+_&quot;</span>, <span class="st">&quot;&quot;</span>, barcode)</span>
+<span id="cb47-39"><a href="#cb47-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (barcode1 <span class="sc">%in%</span> <span class="fu">rownames</span>(sampleID)) {</span>
+<span id="cb47-40"><a href="#cb47-40" aria-hidden="true" tabindex="-1"></a>        soupID[i] <span class="ot">&lt;-</span> sampleID[barcode1, <span class="st">&quot;identity&quot;</span>]</span>
+<span id="cb47-41"><a href="#cb47-41" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb47-42"><a href="#cb47-42" aria-hidden="true" tabindex="-1"></a>        soupID[i] <span class="ot">&lt;-</span> <span class="st">&quot;unassigned&quot;</span></span>
+<span id="cb47-43"><a href="#cb47-43" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb47-44"><a href="#cb47-44" aria-hidden="true" tabindex="-1"></a>    i <span class="ot">&lt;-</span> i <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb47-45"><a href="#cb47-45" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb47-46"><a href="#cb47-46" aria-hidden="true" tabindex="-1"></a>DN<span class="fl">.9</span>pool<span class="sc">$</span>soupID3 <span class="ot">&lt;-</span> soupID</span></code></pre></div>
+<p>We then run HybridDemultiplexing for using all three genotype labels.
+For soupID1, a low convergence score was identified, and a warning was
+poped. HybridID was set to the cell hashing labels cause the genotype
+labels are not accurate.</p>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>DN<span class="fl">.9</span>pool <span class="ot">&lt;-</span> <span class="fu">HybridDemultiplexing</span>(<span class="at">object =</span> DN<span class="fl">.9</span>pool, <span class="at">cellhashing_label =</span> <span class="st">&quot;HTOid&quot;</span>,</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">genotype_label =</span> <span class="st">&quot;soupID1&quot;</span>, <span class="at">hto_names =</span> DN<span class="fl">.9</span>pool.hto<span class="sc">@</span>Dimnames[[<span class="dv">1</span>]])</span></code></pre></div>
+<pre><code>## We matched: 
+## S289 with singlet8
+## S297 with singlet1
+## S299 with singlet4
+## S302 with singlet2
+## S354 with singlet6
+## S365 with singlet7
+## S374 with singlet3
+## S403 with singlet5
+## S409 with singlet0
+## The convergence score between cell hashing demultiplexing and SNP-based demultiplexing is: 0.106513222331048</code></pre>
+<pre><code>## Warning in HybridDemultiplexing(object = DN.9pool, cellhashing_label = &quot;HTOid&quot;,
+## : Corrolation between your cell hashing demultiplexing and SNP-based
+## demultiplexing is very poor. The convergence score is 0.106513222331048 , which
+## is much lower than normal. In this case, we can not trust your SNP-based
+## demultiplexing results. We set your cell hashing ID to the hybrid labels.
+## However, a low convergance score usually indicates high doublet rates or even
+## messed genetic background among different samples. We highly recommand the
+## users to double check the data.</code></pre>
+<p>For soupID2, the convergence score was improved, but still too low.
+HybridID was set to the cell hashing labels cause the genotype labels
+are not accurate.</p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>DN<span class="fl">.9</span>pool <span class="ot">&lt;-</span> <span class="fu">HybridDemultiplexing</span>(<span class="at">object =</span> DN<span class="fl">.9</span>pool, <span class="at">cellhashing_label =</span> <span class="st">&quot;HTOid&quot;</span>,</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">genotype_label =</span> <span class="st">&quot;soupID2&quot;</span>, <span class="at">hto_names =</span> DN<span class="fl">.9</span>pool.hto<span class="sc">@</span>Dimnames[[<span class="dv">1</span>]])</span></code></pre></div>
+<pre><code>## We matched: 
+## S289 with singlet1
+## S297 with singlet3
+## S299 with singlet5
+## S302 with singlet2
+## S354 with singlet4
+## S365 with singlet6
+## S374 with singlet8
+## S403 with singlet7
+## S409 with singlet0
+## The convergence score between cell hashing demultiplexing and SNP-based demultiplexing is: 0.552840009051822</code></pre>
+<pre><code>## Warning in HybridDemultiplexing(object = DN.9pool, cellhashing_label = &quot;HTOid&quot;,
+## : Corrolation between your cell hashing demultiplexing and SNP-based
+## demultiplexing is very poor. The convergence score is 0.552840009051822 , which
+## is much lower than normal. In this case, we can not trust your SNP-based
+## demultiplexing results. We set your cell hashing ID to the hybrid labels.
+## However, a low convergance score usually indicates high doublet rates or even
+## messed genetic background among different samples. We highly recommand the
+## users to double check the data.</code></pre>
+<p>For soupID3, the convergence score was highly improved. HybridID was
+determined by both genotype labels and cell hashing labels.</p>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>DN<span class="fl">.9</span>pool <span class="ot">&lt;-</span> <span class="fu">HybridDemultiplexing</span>(<span class="at">object =</span> DN<span class="fl">.9</span>pool, <span class="at">cellhashing_label =</span> <span class="st">&quot;HTOid&quot;</span>,</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">genotype_label =</span> <span class="st">&quot;soupID3&quot;</span>, <span class="at">hto_names =</span> DN<span class="fl">.9</span>pool.hto<span class="sc">@</span>Dimnames[[<span class="dv">1</span>]])</span></code></pre></div>
+<pre><code>## We matched: 
+## S289 with singlet7
+## S297 with singlet5
+## S299 with singlet3
+## S302 with singlet0
+## S354 with singlet6
+## S365 with singlet1
+## S374 with singlet4
+## S403 with singlet8
+## S409 with singlet2
+## The convergence score between cell hashing demultiplexing and SNP-based demultiplexing is: 0.956576825616217</code></pre>
+<pre><code>## Hybrid demultiplexing done! Results in hybridID</code></pre>
 <p>Session info</p>
-<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
 <pre><code>## R version 4.2.2 (2022-10-31)
 ## Platform: aarch64-apple-darwin20 (64-bit)
 ## Running under: macOS Ventura 13.0
@@ -573,90 +613,47 @@ hashing due to they share the same channel(Antibody Capture)</p>
 ## [5] Seurat_4.3.0.1    
 ## 
 ## loaded via a namespace (and not attached):
-##   [1] utf8_1.2.3                  spatstat.explore_3.2-1     
-##   [3] reticulate_1.30             R.utils_2.12.2             
-##   [5] tidyselect_1.2.0            htmlwidgets_1.6.2          
-##   [7] grid_4.2.2                  BiocParallel_1.32.6        
-##   [9] Rtsne_0.16                  DropletUtils_1.18.1        
-##  [11] munsell_0.5.0               codetools_0.2-18           
-##  [13] ica_1.0-3                   preprocessCore_1.61.0      
-##  [15] future_1.33.0               miniUI_0.1.1.1             
-##  [17] withr_2.5.0                 spatstat.random_3.1-5      
-##  [19] colorspace_2.1-0            progressr_0.13.0           
-##  [21] Biobase_2.58.0              highr_0.10                 
-##  [23] knitr_1.43                  rstudioapi_0.15.0          
-##  [25] stats4_4.2.2                SingleCellExperiment_1.20.1
-##  [27] ROCR_1.0-11                 tensor_1.5                 
-##  [29] listenv_0.9.0               MatrixGenerics_1.10.0      
-##  [31] labeling_0.4.2              GenomeInfoDbData_1.2.9     
-##  [33] polyclip_1.10-4             farver_2.1.1               
-##  [35] rhdf5_2.42.1                rprojroot_2.0.3            
-##  [37] parallelly_1.36.0           vctrs_0.6.3                
-##  [39] generics_0.1.3              xfun_0.39                  
-##  [41] R6_2.5.1                    GenomeInfoDb_1.34.9        
-##  [43] ggbeeswarm_0.7.2            rmdformats_1.0.4           
-##  [45] locfit_1.5-9.8              flexmix_2.3-19             
-##  [47] rhdf5filters_1.10.1         bitops_1.0-7               
-##  [49] spatstat.utils_3.0-3        cachem_1.0.8               
-##  [51] DelayedArray_0.24.0         promises_1.2.0.1           
-##  [53] scales_1.2.1                nnet_7.3-18                
-##  [55] beeswarm_0.4.0              ggExtra_0.10.0             
-##  [57] gtable_0.3.3                beachmat_2.14.2            
-##  [59] egg_0.4.5                   globals_0.16.2             
-##  [61] goftest_1.2-3               rlang_1.1.1                
-##  [63] splines_4.2.2               lazyeval_0.2.2             
-##  [65] spatstat.geom_3.2-2         BiocManager_1.30.19        
-##  [67] yaml_2.3.7                  reshape2_1.4.4             
-##  [69] abind_1.4-5                 httpuv_1.6.11              
-##  [71] tools_4.2.2                 bookdown_0.34              
-##  [73] ggplot2_3.4.2               ellipsis_0.3.2             
-##  [75] jquerylib_0.1.4             RColorBrewer_1.1-3         
-##  [77] BiocGenerics_0.44.0         ggridges_0.5.4             
-##  [79] Rcpp_1.0.11                 hash_2.2.6.2               
-##  [81] plyr_1.8.8                  sparseMatrixStats_1.10.0   
-##  [83] zlibbioc_1.44.0             purrr_1.0.1                
-##  [85] RCurl_1.98-1.12             deldir_1.0-9               
-##  [87] pbapply_1.7-2               S4Vectors_0.36.2           
-##  [89] zoo_1.8-12                  SummarizedExperiment_1.28.0
-##  [91] ggrepel_0.9.3               cluster_2.1.4              
-##  [93] here_1.0.1                  magrittr_2.0.3             
-##  [95] data.table_1.14.8           scattermore_1.2            
-##  [97] lmtest_0.9-40               RANN_2.6.1                 
-##  [99] fitdistrplus_1.1-11         matrixStats_1.0.0          
-## [101] patchwork_1.1.2             mime_0.12                  
-## [103] evaluate_0.21               xtable_1.8-4               
-## [105] IRanges_2.32.0              gridExtra_2.3              
-## [107] compiler_4.2.2              tibble_3.2.1               
-## [109] KernSmooth_2.23-20          R.oo_1.25.0                
-## [111] htmltools_0.5.5             later_1.3.1                
-## [113] tidyr_1.3.0                 tweenr_2.0.2               
-## [115] formatR_1.14                MASS_7.3-58.1              
-## [117] Matrix_1.5-3                cli_3.6.1                  
-## [119] naturalsort_0.1.3           R.methodsS3_1.8.2          
-## [121] parallel_4.2.2              igraph_1.5.1               
-## [123] GenomicRanges_1.50.2        forcats_1.0.0              
-## [125] pkgconfig_2.0.3             prettydoc_0.4.1            
-## [127] sp_2.0-0                    scuttle_1.8.4              
-## [129] plotly_4.10.2               spatstat.sparse_3.0-2      
-## [131] vipor_0.4.5                 bslib_0.5.0                
-## [133] dqrng_0.3.0                 XVector_0.38.0             
-## [135] stringr_1.5.0               digest_0.6.33              
-## [137] sctransform_0.3.5           RcppAnnoy_0.0.21           
-## [139] spatstat.data_3.0-1         rmarkdown_2.23             
-## [141] leiden_0.4.3                edgeR_3.40.2               
-## [143] uwot_0.1.16                 DelayedMatrixStats_1.20.0  
-## [145] shiny_1.7.4.1               modeltools_0.2-23          
-## [147] lifecycle_1.0.3             nlme_3.1-161               
-## [149] jsonlite_1.8.7              Rhdf5lib_1.20.0            
-## [151] limma_3.54.2                viridisLite_0.4.2          
-## [153] fansi_1.0.4                 pillar_1.9.0               
-## [155] lattice_0.20-45             ggrastr_1.0.1              
-## [157] fastmap_1.1.1               httr_1.4.6                 
-## [159] survival_3.5-0              glue_1.6.2                 
-## [161] png_0.1-8                   HDF5Array_1.26.0           
-## [163] ggforce_0.4.1               stringi_1.7.12             
-## [165] sass_0.4.6                  dplyr_1.1.2                
-## [167] irlba_2.3.5.1               future.apply_1.11.0</code></pre>
+##   [1] Rtsne_0.16             colorspace_2.1-0       deldir_1.0-9          
+##   [4] ellipsis_0.3.2         modeltools_0.2-23      ggridges_0.5.4        
+##   [7] spatstat.data_3.0-1    rstudioapi_0.15.0      leiden_0.4.3          
+##  [10] listenv_0.9.0          hash_2.2.6.2           ggrepel_0.9.3         
+##  [13] flexmix_2.3-19         fansi_1.0.4            R.methodsS3_1.8.2     
+##  [16] codetools_0.2-18       splines_4.2.2          cachem_1.0.8          
+##  [19] knitr_1.43             polyclip_1.10-4        jsonlite_1.8.7        
+##  [22] ica_1.0-3              cluster_2.1.4          R.oo_1.25.0           
+##  [25] png_0.1-8              uwot_0.1.16            spatstat.sparse_3.0-2 
+##  [28] shiny_1.7.4.1          sctransform_0.3.5      BiocManager_1.30.19   
+##  [31] compiler_4.2.2         httr_1.4.6             Matrix_1.5-3          
+##  [34] fastmap_1.1.1          lazyeval_0.2.2         cli_3.6.1             
+##  [37] formatR_1.14           later_1.3.1            htmltools_0.5.5       
+##  [40] tools_4.2.2            igraph_1.5.1           gtable_0.3.3          
+##  [43] glue_1.6.2             RANN_2.6.1             reshape2_1.4.4        
+##  [46] dplyr_1.1.2            Rcpp_1.0.11            scattermore_1.2       
+##  [49] jquerylib_0.1.4        vctrs_0.6.3            nlme_3.1-161          
+##  [52] spatstat.explore_3.2-1 progressr_0.13.0       lmtest_0.9-40         
+##  [55] spatstat.random_3.1-5  xfun_0.39              stringr_1.5.0         
+##  [58] globals_0.16.2         mime_0.12              miniUI_0.1.1.1        
+##  [61] lifecycle_1.0.3        irlba_2.3.5.1          goftest_1.2-3         
+##  [64] future_1.33.0          MASS_7.3-58.1          zoo_1.8-12            
+##  [67] scales_1.2.1           spatstat.utils_3.0-3   promises_1.2.0.1      
+##  [70] parallel_4.2.2         RColorBrewer_1.1-3     yaml_2.3.7            
+##  [73] gridExtra_2.3          reticulate_1.30        pbapply_1.7-2         
+##  [76] ggplot2_3.4.2          sass_0.4.6             stringi_1.7.12        
+##  [79] rlang_1.1.1            pkgconfig_2.0.3        matrixStats_1.0.0     
+##  [82] evaluate_0.21          lattice_0.20-45        tensor_1.5            
+##  [85] ROCR_1.0-11            purrr_1.0.1            patchwork_1.1.2       
+##  [88] htmlwidgets_1.6.2      tidyselect_1.2.0       parallelly_1.36.0     
+##  [91] RcppAnnoy_0.0.21       bookdown_0.34          plyr_1.8.8            
+##  [94] magrittr_2.0.3         R6_2.5.1               generics_0.1.3        
+##  [97] pillar_1.9.0           fitdistrplus_1.1-11    prettydoc_0.4.1       
+## [100] abind_1.4-5            survival_3.5-0         sp_2.0-0              
+## [103] nnet_7.3-18            tibble_3.2.1           future.apply_1.11.0   
+## [106] KernSmooth_2.23-20     utf8_1.2.3             spatstat.geom_3.2-2   
+## [109] plotly_4.10.2          rmarkdown_2.23         grid_4.2.2            
+## [112] data.table_1.14.8      rmdformats_1.0.4       digest_0.6.33         
+## [115] xtable_1.8-4           tidyr_1.3.0            httpuv_1.6.11         
+## [118] R.utils_2.12.2         stats4_4.2.2           munsell_0.5.0         
+## [121] viridisLite_0.4.2      bslib_0.5.0</code></pre>
 </div>
 </section>
 

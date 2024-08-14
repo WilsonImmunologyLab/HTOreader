@@ -10,7 +10,8 @@ then:<br>
 
 ## Hnads on Example of Hybrid demultiplexing using real-world data
 Please click this link for a detailed example<br>
->[Hybrid demultiplexing using real-world data]([https://pages.github.com/](https://wilsonimmunologylab.github.io/Librator/Hybrid))
+![aa](/docs/workflow.png)
+>[Hybrid demultiplexing using real-world data](https://wilsonimmunologylab.github.io/Librator/Hybrid)
 <br>
 Please refer to /docs folder of this repository. We have provided the HTML version and the R markdown file. 
 Data for this sample under /data folder. 

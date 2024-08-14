@@ -1,6 +1,6 @@
 # HTOreader
 An R toolkit for cell hashing (HTO) demultiplexing
-
+<img src="https://github.com/WilsonImmunologyLab/HTOreader/blob/main/docs/workflow.png">
 ## How to install
 make sure you installed these two dependencies:<br>
 `install.packages("flexmix")` <br> `install.packages("hash")`<br>
@@ -9,9 +9,9 @@ then:<br>
 `devtools::install_github("WilsonImmunologyLab/HTOreader")`
 
 ## Hnads on Example of Hybrid demultiplexing using real-world data
-Please click this link for a detailed example<br>
-<img src="https://github.com/WilsonImmunologyLab/HTOreader/blob/main/docs/workflow.png">
 
+
+Please click the following link for a detailed example<br>
 <img src="https://github.com/WilsonImmunologyLab/HTOreader/blob/main/docs/arrow_down.png" width="100">
 
 >[Hybrid demultiplexing using real-world data](https://wilsonimmunologylab.github.io/Librator/Hybrid)
